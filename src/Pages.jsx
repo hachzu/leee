@@ -15,6 +15,22 @@ import asset_newsign_png from "./assets/newsign.png";
 import aboutStyles from './about.css?inline';
 import socialStyles from './socials.css?inline';
 import BgVideo from './BgVideo.jsx';
+import asset_Sys_Cursor_wav from "./assets/Sys_Cursor.wav";
+
+// Cursor sound for hovering / cycling through buttons.
+// Browsers block sound until the visitor has clicked or pressed a key once,
+// so the very first hover can be silent. That is normal.
+let cursorSfx = null;
+export function playCursor() {
+  try {
+    if (!cursorSfx) {
+      cursorSfx = new Audio(asset_Sys_Cursor_wav);
+      cursorSfx.volume = 0.5; // 0 = silent, 1 = full volume
+    }
+    cursorSfx.currentTime = 0;
+    cursorSfx.play().catch(() => {});
+  } catch (err) {}
+}
 // About page
 const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
 const ABOUTME_MAIN_IMAGES = [asset_mainm_jpeg, asset_mainm2_jpeg, asset_mainf_jpeg];
@@ -127,8 +143,14 @@ export function AboutMe() {
   }, []);
   useEffect(() => {
     const onKey = e => {
-      if (e.key === "ArrowUp") setActive(i => Math.max(0, i - 1));
-      if (e.key === "ArrowDown") setActive(i => Math.min(ABOUTME_ITEMS.length - 1, i + 1));
+      if (e.key === "ArrowUp" && active > 0) {
+        playCursor();
+        setActive(active - 1);
+      }
+      if (e.key === "ArrowDown" && active < ABOUTME_ITEMS.length - 1) {
+        playCursor();
+        setActive(active + 1);
+      }
       if (e.key === "Enter") setRevealed(true);
       if (e.key === "ArrowRight") setRevealed(true);
       if (e.key === "ArrowLeft") {
@@ -164,6 +186,7 @@ export function AboutMe() {
         {ABOUTME_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
         handleBarClick(i);
       }} onMouseEnter={() => {
+        if (active !== i) playCursor();
         setActive(i);
       }}>
             <div className="sc-bar-red" />
@@ -292,8 +315,14 @@ export function Socials() {
   useEffect(() => {
     const onKey = e => {
       if (focus === "left") {
-        if (e.key === "ArrowUp") setActive(i => Math.max(0, i - 1));
-        if (e.key === "ArrowDown") setActive(i => Math.min(SOCIALS_ITEMS.length - 1, i + 1));
+        if (e.key === "ArrowUp" && active > 0) {
+          playCursor();
+          setActive(active - 1);
+        }
+        if (e.key === "ArrowDown" && active < SOCIALS_ITEMS.length - 1) {
+          playCursor();
+          setActive(active + 1);
+        }
         if (e.key === "ArrowRight") {
           setFocus("right");
           setActiveInfoBar(0);
@@ -301,8 +330,14 @@ export function Socials() {
         if (e.key === "Enter") window.open(SOCIALS_ITEMS[active].href, "_blank");
       } else {
         const barCount = SOCIALS_ITEMS[active].bars;
-        if (e.key === "ArrowUp") setActiveInfoBar(i => Math.max(0, i - 1));
-        if (e.key === "ArrowDown") setActiveInfoBar(i => Math.min(barCount - 1, i + 1));
+        if (e.key === "ArrowUp" && activeInfoBar > 0) {
+          playCursor();
+          setActiveInfoBar(activeInfoBar - 1);
+        }
+        if (e.key === "ArrowDown" && activeInfoBar < barCount - 1) {
+          playCursor();
+          setActiveInfoBar(activeInfoBar + 1);
+        }
         if (e.key === "ArrowLeft") setFocus("left");
         if (e.key === "Enter") window.open("https://" + SOCIALS_ITEMS[active].links[activeInfoBar], "_blank");
       }
@@ -310,7 +345,7 @@ export function Socials() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [active, navigate, focus]);
+  }, [active, activeInfoBar, navigate, focus]);
   return <div id="menu-screen">
       <BgVideo src={asset_main3_mp4} />
       <style>{socialStyles}</style>
@@ -318,7 +353,10 @@ export function Socials() {
       <div className="sc-root" role="navigation">
         {SOCIALS_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
         if (active === i) window.open(item.href, "_blank");else setActive(i);
-      }} onMouseEnter={() => setActive(i)}>
+      }} onMouseEnter={() => {
+        if (active !== i) playCursor();
+        setActive(i);
+      }}>
             <div className="sc-bar-red" />
             <div className="sc-bar">
               <img className="sc-char" src={SOCIALS_CHARS[i]} alt="" />
@@ -373,7 +411,10 @@ export function Socials() {
           return;
         }
         setActiveInfoBar(i);
-      }} onMouseEnter={() => setActiveInfoBar(i)}>
+      }} onMouseEnter={() => {
+        if (activeInfoBar !== i) playCursor();
+        setActiveInfoBar(i);
+      }}>
               {SOCIALS_ITEMS[active].newBars.includes(i) && <img className="sc-info-bar-new" src={asset_newsign_png} alt="" />}
               <div className="sc-info-bar">
                 <img className="sc-info-bar-icon" src={SOCIALS_ITEMS[active].barIcon} alt="" />

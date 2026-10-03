@@ -8,7 +8,7 @@ import asset_main3_mp4 from "./assets/main3.mp4";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { AboutMe, Socials } from './Pages.jsx';
+import { AboutMe, Socials, playCursor } from './Pages.jsx';
 import './styles.css';
 import BgVideo from './BgVideo.jsx';
 
@@ -95,6 +95,7 @@ function P3Menu({
   const [mounted, setMounted] = useState(false);
   const [animKey, setAnimKey] = useState(0);
   const activate = idx => {
+    if (idx !== active) playCursor();
     setActive(idx);
     setAnimKey(k => k + 1);
   };
@@ -234,14 +235,20 @@ function ResumePage({
   }, []);
   useEffect(() => {
     const onKey = e => {
-      if (e.key === "ArrowUp") setActive(i => Math.max(0, i - 1));
-      if (e.key === "ArrowDown") setActive(i => Math.min(RESUMEPAGE_ITEMS.length - 1, i + 1));
+      if (e.key === "ArrowUp" && active > 0) {
+        playCursor();
+        setActive(active - 1);
+      }
+      if (e.key === "ArrowDown" && active < RESUMEPAGE_ITEMS.length - 1) {
+        playCursor();
+        setActive(active + 1);
+      }
       if (e.key === "ArrowLeft") navigate(-1);
       if (e.key === "Escape" || e.key === "Backspace") navigate(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
+  }, [navigate, active]);
   return <div id="menu-screen">
       <BgVideo src={src} />
       <div className="resume-entry-mask" aria-hidden="true">
@@ -254,6 +261,7 @@ function ResumePage({
           {RESUMEPAGE_ITEMS.map((item, index) => <div key={item.id} className={`resume-card-wrap${active === index ? " active" : ""}${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${index * 55}ms`
         }} onMouseEnter={() => {
+          if (active !== index) playCursor();
           setActive(index);
         }} onClick={() => {
           setActive(index);
