@@ -1,0 +1,1048 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&display=swap');
+
+/* Global layout and responsive rules */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+}
+
+#menu-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+#menu-screen video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#main {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Touch-friendly defaults for narrow screens */
+@media (max-width: 1024px) {
+  #menu-screen,
+  #main {
+    height: 100dvh;
+  }
+
+  .p3-menu {
+    padding: clamp(12px, 2.5vw, 24px) !important;
+    transform: scale(0.86);
+    transform-origin: center;
+  }
+
+  .p3-name-tag {
+    font-size: clamp(56px, 9vw, 94px) !important;
+    top: clamp(6px, 2vw, 14px) !important;
+    left: clamp(8px, 2vw, 18px) !important;
+    transform: rotate(12deg) !important;
+  }
+
+  .p3-hint {
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    right: clamp(10px, 2.5vw, 18px) !important;
+  }
+
+  .resume-stack {
+    left: clamp(8px, 2vw, 18px) !important;
+    top: clamp(12px, 3vh, 28px) !important;
+    width: min(92vw, 740px) !important;
+    transform: none !important;
+    gap: 8px !important;
+  }
+
+  .resume-detail-panel {
+    right: clamp(8px, 2vw, 16px) !important;
+    width: min(90vw, 680px) !important;
+  }
+
+  .sc-root {
+    justify-content: flex-start !important;
+    padding-top: clamp(12px, 4vh, 34px) !important;
+    gap: 4px !important;
+  }
+
+  .sc-bar,
+  .sc-bar-red {
+    width: min(88vw, 760px) !important;
+  }
+
+  .sc-char {
+    left: clamp(56px, 8vw, 86px) !important;
+    max-width: clamp(88px, 16vw, 130px) !important;
+  }
+
+  .sc-main {
+    padding-left: clamp(54px, 10vw, 90px) !important;
+  }
+
+  .sc-label {
+    font-size: clamp(18px, 3.2vw, 24px) !important;
+    letter-spacing: clamp(1px, 0.7vw, 3px) !important;
+  }
+
+  .sc-role {
+    font-size: clamp(30px, 5vw, 40px) !important;
+  }
+
+  .sc-stats {
+    gap: clamp(4px, 1vw, 8px) !important;
+    padding-right: clamp(8px, 2vw, 16px) !important;
+  }
+
+  .sc-stat-num {
+    font-size: clamp(16px, 2.5vw, 22px) !important;
+  }
+
+  .sc-right-nav {
+    top: clamp(8px, 2.5vh, 22px) !important;
+    right: clamp(8px, 2vw, 16px) !important;
+  }
+
+  .sc-right-nav .sc-nav-btn {
+    font-size: clamp(52px, 8.5vw, 84px) !important;
+    -webkit-text-stroke: 1px #000 !important;
+  }
+
+  .sc-right-nav .sc-nav-label {
+    font-size: clamp(18px, 2.8vw, 24px) !important;
+    letter-spacing: 1px !important;
+  }
+
+  .sc-info-bar-wrap {
+    left: 52% !important;
+    height: clamp(38px, 5.2vh, 46px) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .p3-menu {
+    transform: scale(0.66);
+  }
+
+  .p3-row {
+    transform-origin: center;
+  }
+
+  .p3-name-tag {
+    font-size: clamp(44px, 10vw, 68px) !important;
+    letter-spacing: 1px !important;
+    line-height: 0.9 !important;
+  }
+
+  .p3-hint {
+    font-size: 11px !important;
+    gap: 2px !important;
+  }
+
+  .p3-hint-row {
+    font-size: 10px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .resume-overlay {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  .resume-stack {
+    position: relative !important;
+    width: min(96vw, 620px) !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 10px auto 0 auto !important;
+  }
+
+  .resume-list-tag {
+    font-size: clamp(46px, 12vw, 76px) !important;
+    margin-left: 8px !important;
+  }
+
+  .resume-card {
+    height: clamp(72px, 13vw, 96px) !important;
+  }
+
+  .resume-card-inner {
+    padding: 10px 14px 10px 44px !important;
+  }
+
+  .resume-badge {
+    width: clamp(34px, 8vw, 48px) !important;
+    height: clamp(44px, 10vw, 62px) !important;
+    left: -7px !important;
+  }
+
+  .resume-badge-text {
+    font-size: clamp(24px, 5.5vw, 32px) !important;
+  }
+
+  .resume-title {
+    font-size: clamp(24px, 7vw, 40px) !important;
+  }
+
+  .resume-rank-label {
+    font-size: clamp(16px, 3.8vw, 24px) !important;
+  }
+
+  .resume-rank-number {
+    font-size: clamp(34px, 8.5vw, 54px) !important;
+  }
+
+  .resume-subtitle-bar {
+    left: 42px !important;
+    right: 8px !important;
+    height: clamp(22px, 5vw, 30px) !important;
+    bottom: 8px !important;
+    padding: 0 10px !important;
+  }
+
+  .resume-subtitle {
+    font-size: clamp(14px, 3.4vw, 22px) !important;
+  }
+
+  .resume-detail-panel {
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: min(96vw, 620px) !important;
+    min-height: 0 !important;
+    margin: 12px auto 24px auto !important;
+    padding: 14px 12px !important;
+  }
+
+  .resume-detail-top {
+    grid-template-columns: 44px 1fr auto !important;
+    min-height: 64px !important;
+    gap: 8px !important;
+    padding: 0 10px !important;
+  }
+
+  .resume-detail-top-index {
+    font-size: clamp(28px, 6vw, 38px) !important;
+  }
+
+  .resume-detail-top-title {
+    font-size: clamp(22px, 5vw, 32px) !important;
+  }
+
+  .resume-detail-top-progress {
+    font-size: clamp(24px, 6vw, 36px) !important;
+  }
+
+  .resume-detail-row {
+    min-height: 44px !important;
+    gap: 8px !important;
+    grid-template-columns: 34px 1fr auto !important;
+    padding: 0 8px !important;
+  }
+
+  .resume-detail-row-index {
+    font-size: clamp(18px, 4vw, 24px) !important;
+  }
+
+  .resume-detail-row-title {
+    font-size: clamp(16px, 3.9vw, 22px) !important;
+  }
+
+  .resume-detail-status {
+    font-size: clamp(14px, 3.2vw, 18px) !important;
+    padding: 4px 8px !important;
+  }
+
+  .resume-detail-bottom-title {
+    font-size: clamp(20px, 4.8vw, 28px) !important;
+  }
+
+  .resume-detail-bullet {
+    font-size: clamp(14px, 3.6vw, 18px) !important;
+  }
+
+  .sc-root {
+    padding-top: 10px !important;
+    gap: 3px !important;
+  }
+
+  .sc-bar,
+  .sc-bar-red {
+    width: min(96vw, 560px) !important;
+    height: clamp(48px, 8.5vh, 58px) !important;
+  }
+
+  .sc-bar-outer.active .sc-bar,
+  .sc-bar-outer.active .sc-bar-red {
+    height: clamp(62px, 10vh, 72px) !important;
+  }
+
+  .sc-bar-content {
+    padding: 0 8px !important;
+  }
+
+  .sc-role {
+    font-size: clamp(22px, 4.8vw, 30px) !important;
+    padding: 0 8px 0 4px !important;
+  }
+
+  .sc-main {
+    padding-left: clamp(44px, 11vw, 66px) !important;
+  }
+
+  .sc-main-top {
+    gap: 6px !important;
+  }
+
+  .sc-icon {
+    font-size: clamp(14px, 3vw, 18px) !important;
+    width: 20px !important;
+  }
+
+  .sc-label {
+    font-size: clamp(14px, 3.6vw, 18px) !important;
+    letter-spacing: 1px !important;
+  }
+
+  .sc-stats {
+    display: none !important;
+  }
+
+  .sc-char {
+    left: clamp(34px, 8vw, 50px) !important;
+    max-width: clamp(62px, 14vw, 88px) !important;
+  }
+
+  .sc-info-bar-wrap {
+    left: 2.5% !important;
+    right: 2.5% !important;
+    width: auto !important;
+    height: clamp(34px, 5.8vh, 40px) !important;
+  }
+
+  .sc-info-bar-icon {
+    margin-left: 8px !important;
+  }
+
+  .sc-info-bar-text {
+    font-size: clamp(14px, 3.2vw, 18px) !important;
+    letter-spacing: 1px !important;
+    padding: 0 8px !important;
+  }
+
+  .sc-info-bar-box {
+    font-size: clamp(12px, 2.8vw, 16px) !important;
+    padding: 0 8px !important;
+  }
+
+  .sc-info-bar-count {
+    font-size: clamp(13px, 3vw, 16px) !important;
+    margin-right: 10px !important;
+  }
+
+  .sc-right-nav {
+    left: 8px !important;
+    right: auto !important;
+    top: 6px !important;
+    gap: 3px !important;
+  }
+
+  .sc-right-nav .sc-nav-btn {
+    font-size: clamp(36px, 9vw, 52px) !important;
+    padding: 0 2px !important;
+    -webkit-text-stroke: 1px #000 !important;
+  }
+
+  .sc-right-nav .sc-nav-label,
+  .sc-right-nav .sc-nav-dot {
+    display: none !important;
+  }
+
+  .sc-right-nav .sc-nav-arrow {
+    font-size: 16px !important;
+  }
+
+  .sc-main-portrait-shell {
+    width: 44vw !important;
+    right: -10vw !important;
+  }
+
+  .sc-reveal-panel {
+    width: 96vw !important;
+    left: -22vw !important;
+    top: 42vh !important;
+    height: 56vh !important;
+    transform: translateX(0) rotate(-14deg) !important;
+  }
+
+  .sc-reveal-upper-line {
+    font-size: clamp(13px, 3.2vw, 16px) !important;
+    line-height: 1.1 !important;
+    padding: 0 12px !important;
+  }
+
+  .sc-reveal-lower-bar {
+    width: 60% !important;
+    font-size: clamp(14px, 3.2vw, 17px) !important;
+    padding-left: 10px !important;
+  }
+
+  .sc-footer {
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    right: 8px !important;
+    gap: 2px !important;
+  }
+
+  .sc-footer-row {
+    font-size: 10px !important;
+    letter-spacing: 1px !important;
+    gap: 5px !important;
+  }
+
+  .sc-footer-key {
+    padding: 1px 4px !important;
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .p3-menu {
+    transform: scale(0.54);
+  }
+
+  .p3-name-tag {
+    font-size: clamp(34px, 10vw, 48px) !important;
+  }
+
+  .sc-main-portrait-shell {
+    width: 46vw !important;
+    right: -12vw !important;
+  }
+
+  .sc-reveal-panel {
+    top: 45vh !important;
+    left: -34vw !important;
+    width: 122vw !important;
+    height: 52vh !important;
+  }
+}
+/* Menu */
+.p3-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.p3-stripe  { position:absolute; right:0; top:0; bottom:0; width:5px; background:#c4001a; z-index:10; pointer-events:none; }
+.p3-stripe2 { position:absolute; right:9px; top:0; bottom:0; width:2px; background:rgba(245,122,139,0.22); z-index:10; pointer-events:none; }
+
+.p3-menu {
+  position: relative;
+  z-index: 20;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: all;
+}
+
+.p3-row {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateX(36px);
+  transition: opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1);
+}
+.p3-row.mounted {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+}
+
+.p3-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%; height: 200%;
+  background: radial-gradient(ellipse at center, rgba(255,100,180,0.35) 0%, transparent 70%);
+  filter: blur(18px);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.p3-row.active .p3-glow { opacity: 1; }
+
+.p3-skew-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+}
+
+@keyframes p3-shadow-pop {
+  0%   { transform: translateY(-40%) translateX(-12px) scaleX(0) scaleY(1); }
+  55%  { transform: translateY(-46%) translateX(-15px) scaleX(1.22) scaleY(1.18); }
+  75%  { transform: translateY(-39%) translateX(-11px) scaleX(0.96) scaleY(0.97); }
+  100% { transform: translateY(-40%) translateX(-12px) scaleX(1) scaleY(1); }
+}
+
+.p3-shadow-tri {
+  position: absolute;
+  top: 50%;
+  transform-origin: left center;
+  background: rgba(235, 80, 120, 0.85);
+  z-index: 1;
+  pointer-events: none;
+  transform: translateY(-40%) translateX(-12px) scaleX(0);
+  transition: transform 0.18s ease;
+}
+.p3-shadow-tri.pop {
+  animation: p3-shadow-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.p3-highlight {
+  position: absolute;
+  top: 50%;
+  transform-origin: left center;
+  background: #ffffff;
+  z-index: 2;
+  transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
+  pointer-events: none;
+}
+
+.p3-label-wrap {
+  position: relative;
+  z-index: 3;
+}
+
+.p3-label-base {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  letter-spacing: 2px;
+  line-height: 0.85;
+  display: block;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.p3-label-dark {
+  color: #3ce2ff;
+  transition: color 0.12s ease;
+}
+.p3-row.active .p3-label-dark { color: #6b0010; }
+.p3-row:hover:not(.active) .p3-label-dark { color: #00d9ff; }
+
+.p3-label-bright {
+  color: #ff2a2a;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.p3-row.active .p3-label-bright { opacity: 1; }
+
+.p3-hint {
+  position: absolute;
+  bottom: 24px; right: 28px;
+  z-index: 20;
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 5px;
+  font-family: 'Anton', sans-serif;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.9s;
+}
+.p3-hint.mounted { opacity: 1; }
+.p3-hint-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.28);
+}
+.p3-hint-key {
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 3px;
+  padding: 1px 6px; font-size: 11px;
+}
+
+.p3-name-tag {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  z-index: 20;
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 108px;
+  line-height: 0.88;
+  letter-spacing: 2px;
+  color: rgba(10, 10, 14, 0.64);
+  transform: rotate(18deg);
+  transform-origin: left top;
+  user-select: none;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.p3-name-tag span:first-child {
+  color: rgba(0, 0, 0, 0.86);
+}
+
+/* Resume */
+
+
+.resume-entry-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  overflow: hidden;
+  background: #0047FF;
+  clip-path: circle(0 at 50% 50%);
+  animation: resume-entry-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+.resume-entry-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes resume-entry-reveal {
+  from { clip-path: circle(0 at 50% 50%); }
+  to { clip-path: circle(150vmax at 50% 50%); }
+}
+
+.resume-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.resume-stack {
+  position: absolute;
+  top: 9vh;
+  left: 2.8vw;
+  width: min(47vw, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  transform: scale(0.9);
+  transform-origin: top left;
+}
+
+.resume-list-tag {
+  font-family: 'Anton', sans-serif;
+  font-size: 92px;
+  line-height: 0.9;
+  color: #f6fbff;
+  letter-spacing: 2px;
+  margin: 0 0 6px 12px;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.18);
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.resume-list-tag.mounted {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.resume-card-wrap {
+  position: relative;
+  opacity: 0;
+  transform: translateX(-48px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: all;
+  cursor: pointer;
+}
+.resume-card-wrap.mounted {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.resume-card {
+  position: relative;
+  height: 112px;
+  background: #10185f;
+  clip-path: polygon(0 0, 97% 0, 100% 100%, 3% 100%);
+  box-shadow: 0 8px 0 rgba(5, 13, 59, 0.85);
+  transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  overflow: visible;
+}
+.resume-card-wrap.active .resume-card {
+  background: #ffffff;
+  box-shadow: 10px 8px 0 #d63232;
+  transform: translateX(6px);
+}
+
+.resume-card-inner {
+  position: absolute;
+  inset: 0;
+  padding: 14px 22px 14px 62px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.resume-badge {
+  position: absolute;
+  top: 10px;
+  left: -10px;
+  width: 56px;
+  height: 70px;
+  background: #0b113d;
+  border: 3px solid #9cf7ff;
+  clip-path: polygon(14% 0, 100% 0, 84% 100%, 0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-8deg);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.28);
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+.resume-badge-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: #d2fdff;
+  letter-spacing: 1px;
+  transform: rotate(8deg);
+}
+.resume-card-wrap.active .resume-badge {
+  background: #000;
+  border-color: #000;
+}
+.resume-card-wrap.active .resume-badge-text {
+  color: #fff;
+}
+
+.resume-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 56px;
+  line-height: 0.9;
+  letter-spacing: 1px;
+  color: #a5f6ff;
+  transition: color 0.22s ease;
+}
+.resume-card-wrap.active .resume-title {
+  color: #000;
+}
+
+.resume-rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.resume-rank-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #9ffbff;
+  transition: color 0.22s ease;
+}
+.resume-rank-number {
+  font-family: 'Anton', sans-serif;
+  font-size: 70px;
+  line-height: 0.82;
+  color: #9ffbff;
+  transition: color 0.22s ease;
+}
+.resume-card-wrap.active .resume-rank-label,
+.resume-card-wrap.active .resume-rank-number {
+  color: #000;
+}
+
+.resume-subtitle-bar {
+  position: absolute;
+  left: 64px;
+  right: 14px;
+  bottom: 12px;
+  height: 34px;
+  background: #85f4ff;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  transition: background 0.22s ease;
+}
+.resume-card-wrap.active .resume-subtitle-bar {
+  background: #000;
+}
+
+.resume-subtitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #041238;
+  transition: color 0.22s ease;
+}
+.resume-card-wrap.active .resume-subtitle {
+  color: #fff;
+}
+
+.resume-detail-panel {
+  position: absolute;
+  top: 9.5vh;
+  right: 4.5vw;
+  width: min(39vw, 620px);
+  min-height: 74vh;
+  z-index: 12;
+  padding: 22px 24px 24px 24px;
+  background: linear-gradient(180deg, rgba(15, 28, 105, 0.96) 0%, rgba(8, 16, 68, 0.97) 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(133, 244, 255, 0.16),
+    16px 16px 0 rgba(0, 6, 30, 0.55);
+  overflow: hidden;
+}
+.resume-detail-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(133, 244, 255, 0.08) 0 15%, transparent 15% 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 24%);
+  pointer-events: none;
+}
+.resume-detail-top {
+  position: relative;
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 92px;
+  padding: 0 18px;
+  background: linear-gradient(90deg, #8ef5ff 0%, #d3fdff 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+  color: #08153f;
+  box-shadow: 10px 0 0 rgba(255, 94, 136, 0.88);
+}
+.resume-detail-top-index {
+  font-family: 'Anton', sans-serif;
+  font-size: 46px;
+  line-height: 1;
+}
+.resume-detail-top-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 42px;
+  line-height: 0.92;
+  letter-spacing: 1px;
+}
+.resume-detail-top-progress {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.resume-detail-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+.resume-detail-row {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 0 14px;
+  background: rgba(8, 18, 72, 0.96);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px rgba(140, 239, 255, 0.12);
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+.resume-detail-row:hover {
+  transform: translateX(4px);
+  background: rgba(12, 26, 94, 1);
+}
+.resume-detail-row-index {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: #94f4ff;
+}
+.resume-detail-row-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  color: #f2fcff;
+}
+.resume-detail-status {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 1.1px;
+  color: #06133b;
+  background: #8df6ff;
+  padding: 7px 12px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.resume-detail-bottom {
+  position: relative;
+  margin-top: 22px;
+  padding: 18px;
+  background: rgba(5, 13, 57, 0.97);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px rgba(145, 239, 255, 0.12);
+}
+.resume-detail-bottom-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px;
+  letter-spacing: 2px;
+  color: #91f5ff;
+  margin-bottom: 14px;
+}
+.resume-detail-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.resume-detail-bullet {
+  font-family: 'Anton', sans-serif;
+  font-size: 21px;
+  line-height: 1.15;
+  color: #edfaff;
+}
+
+.resume-mobile-controls {
+  display: none;
+}
+
+.resume-mobile-btn {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(6, 13, 55, 0.8);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1.2px;
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  min-width: 84px;
+}
+
+@media (max-width: 768px) {
+  .resume-mobile-controls {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    pointer-events: all;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Control hints: main menu (.p3-hint) and About / Socials pages (.sc-footer).
+   Plain white text with the key symbol, slightly faded, with a soft shadow
+   so it stays readable on top of the background video.
+   The #menu-screen prefix makes these rules win over the older hint styles
+   above and over about.css / socials.css.
+   To go back to the old look, delete everything from here down.
+   ───────────────────────────────────────────── */
+
+#menu-screen .p3-hint,
+#menu-screen .sc-footer {
+  bottom: 22px;
+  right: 28px;
+  gap: 8px;
+  align-items: flex-end;
+  font-family: 'Anton', sans-serif;
+}
+
+#menu-screen .p3-hint-row,
+#menu-screen .sc-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  letter-spacing: 2.5px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+#menu-screen .p3-hint-key,
+#menu-screen .sc-footer-key {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: 22px;
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  #menu-screen .p3-hint,
+  #menu-screen .sc-footer {
+    bottom: 14px !important;
+    right: 10px !important;
+    gap: 5px !important;
+  }
+
+  #menu-screen .p3-hint-row,
+  #menu-screen .sc-footer-row {
+    font-size: 14px !important;
+    letter-spacing: 1.5px !important;
+    gap: 6px !important;
+  }
+
+  #menu-screen .p3-hint-key,
+  #menu-screen .sc-footer-key {
+    padding: 0 !important;
+    font-size: 14px !important;
+  }
+}
