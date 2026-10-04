@@ -392,6 +392,17 @@ const ABOUTME_ITEMS = [{
   }]
 }];
 
+// Safety patch for the About detail card. The card's pop-in animations start at opacity 0 and
+// used fill-mode "both", so if a browser/GPU never runs the animation (seen on some Edge + Windows
+// setups) the card stays invisible even though it is in the page. "backwards" keeps the pop-in but
+// falls back to the normal, visible styles if the animation doesn't run.
+// The drop-shadow filter on the clipped card is also removed, since it is a known paint-bug trigger.
+const aboutPatch = `
+.ad-panel { filter: none !important; animation-fill-mode: backwards !important; }
+.ad-shell { animation-fill-mode: backwards !important; }
+.ad-row, .ad-item, .ad-tag, .ad-text { animation-fill-mode: backwards !important; }
+`;
+
 // The card that shows on the right side of the About page.
 function AboutDetail({ item, index, chip }) {
   let n = 0; // counts rows so they pop in one after another
@@ -489,7 +500,7 @@ export function AboutMe() {
   return <div id="menu-screen">
       <BgVideo src={VIDEO.about} poster={poster_main1} />
       {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
-      <style>{aboutStyles}</style>
+      <style>{aboutStyles + aboutPatch}</style>
       <div className={`pg-title${mounted ? " mounted" : ""}`}>ABOUT ME</div>
 
       <div className="sc-root" role="navigation">
