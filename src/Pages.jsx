@@ -19,12 +19,14 @@ import asset_open_ui_wav from "./assets/open_ui.wav";
 import asset_enter_ui_wav from "./assets/enter_ui.wav";
 import asset_navigation_ui_wav from "./assets/navigation_ui.wav";
 import asset_back_ui_wav from "./assets/back_ui.wav";
+import asset_deck_ui_wav from "./assets/deck_ui.wav";
 
 // ─────────────────────────────────────────────
 // UI sounds
 //   open_ui        menu screen appears (also when coming back to it)
 //   enter_ui       a button is clicked / confirmed
 //   back_ui        the visitor goes back (Esc, Backspace, ←, BACK button)
+//   deck_ui        navigating while inside a deck (About reveal, Socials link list)
 //   navigation_ui  hovering or cycling through elements
 // Every play uses a fresh copy of the sound, so sounds are never cut off:
 // quick repeats layer on top of each other until each one finishes.
@@ -40,7 +42,8 @@ const SFX = {
   open: { audio: makeSfx(asset_open_ui_wav), volume: 0.6 },
   enter: { audio: makeSfx(asset_enter_ui_wav), volume: 0.6 },
   nav: { audio: makeSfx(asset_navigation_ui_wav), volume: 0.5 }, // volume: 0 = silent, 1 = full
-  back: { audio: makeSfx(asset_back_ui_wav), volume: 0.6 }
+  back: { audio: makeSfx(asset_back_ui_wav), volume: 0.6 },
+  deck: { audio: makeSfx(asset_deck_ui_wav), volume: 0.5 }
 };
 function playSfx(name) {
   try {
@@ -57,8 +60,14 @@ export const playNav = () => {
 export const playEnter = () => {
   playSfx("enter");
 };
+export const playOpen = () => {
+  playSfx("open");
+};
 export const playBack = () => {
   playSfx("back");
+};
+export const playDeck = () => {
+  playSfx("deck");
 };
 
 // open_ui: plays when the menu screen shows. If the browser blocks it (no click
@@ -210,11 +219,11 @@ export function AboutMe() {
   useEffect(() => {
     const onKey = e => {
       if (e.key === "ArrowUp" && active > 0) {
-        playNav();
+        if (revealed) playDeck();else playNav();
         setActive(active - 1);
       }
       if (e.key === "ArrowDown" && active < ABOUTME_ITEMS.length - 1) {
-        playNav();
+        if (revealed) playDeck();else playNav();
         setActive(active + 1);
       }
       if (e.key === "Enter") {
@@ -259,7 +268,9 @@ export function AboutMe() {
         {ABOUTME_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
         handleBarClick(i);
       }} onMouseEnter={() => {
-        if (active !== i) playNav();
+        if (active !== i) {
+          if (revealed) playDeck();else playNav();
+        }
         setActive(i);
       }}>
             <div className="sc-bar-red" />
@@ -413,11 +424,11 @@ export function Socials() {
       } else {
         const barCount = SOCIALS_ITEMS[active].bars;
         if (e.key === "ArrowUp" && activeInfoBar > 0) {
-          playNav();
+          playDeck();
           setActiveInfoBar(activeInfoBar - 1);
         }
         if (e.key === "ArrowDown" && activeInfoBar < barCount - 1) {
-          playNav();
+          playDeck();
           setActiveInfoBar(activeInfoBar + 1);
         }
         if (e.key === "ArrowLeft") {
@@ -505,7 +516,7 @@ export function Socials() {
         }
         setActiveInfoBar(i);
       }} onMouseEnter={() => {
-        if (activeInfoBar !== i) playNav();
+        if (activeInfoBar !== i) playDeck();
         setActiveInfoBar(i);
       }}>
               {SOCIALS_ITEMS[active].newBars.includes(i) && <img className="sc-info-bar-new" src={asset_newsign_png} alt="" />}
