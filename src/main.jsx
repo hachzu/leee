@@ -8,7 +8,7 @@ import asset_main3_mp4 from "./assets/main3.mp4";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { AboutMe, Socials, playCursor } from './Pages.jsx';
+import { AboutMe, Socials, playNav, playEnter, playBack, playOpenOnStart } from './Pages.jsx';
 import './styles.css';
 import BgVideo from './BgVideo.jsx';
 
@@ -95,7 +95,7 @@ function P3Menu({
   const [mounted, setMounted] = useState(false);
   const [animKey, setAnimKey] = useState(0);
   const activate = idx => {
-    if (idx !== active) playCursor();
+    if (idx !== active) playNav();
     setActive(idx);
     setAnimKey(k => k + 1);
   };
@@ -236,15 +236,17 @@ function ResumePage({
   useEffect(() => {
     const onKey = e => {
       if (e.key === "ArrowUp" && active > 0) {
-        playCursor();
+        playNav();
         setActive(active - 1);
       }
       if (e.key === "ArrowDown" && active < RESUMEPAGE_ITEMS.length - 1) {
-        playCursor();
+        playNav();
         setActive(active + 1);
       }
-      if (e.key === "ArrowLeft") navigate(-1);
-      if (e.key === "Escape" || e.key === "Backspace") navigate(-1);
+      if (e.key === "ArrowLeft" || e.key === "Escape" || e.key === "Backspace") {
+        playBack();
+        navigate(-1);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -261,9 +263,10 @@ function ResumePage({
           {RESUMEPAGE_ITEMS.map((item, index) => <div key={item.id} className={`resume-card-wrap${active === index ? " active" : ""}${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${index * 55}ms`
         }} onMouseEnter={() => {
-          if (active !== index) playCursor();
+          if (active !== index) playNav();
           setActive(index);
         }} onClick={() => {
+          playEnter();
           setActive(index);
         }}>
               <div className="resume-card">
@@ -312,7 +315,10 @@ function ResumePage({
       </div>
 
       <div className="resume-mobile-controls" aria-label="Resume mobile controls">
-        <button className="resume-mobile-btn" type="button" onClick={() => navigate(-1)}>
+        <button className="resume-mobile-btn" type="button" onClick={() => {
+          playBack();
+          navigate(-1);
+        }}>
           BACK
         </button>
       </div>
@@ -503,9 +509,15 @@ function PageTransition({
 // ─────────────────────────────────────────────
 function MenuScreen() {
   const navigate = useNavigate();
+  useEffect(() => {
+    playOpenOnStart(); // plays every time the menu screen shows
+  }, []);
   return <div id="menu-screen">
       <BgVideo src={asset_Mainn_mp4} />
-      <P3Menu onNavigate={page => navigate(`/${page}`)} />
+      <P3Menu onNavigate={page => {
+        playEnter();
+        navigate(`/${page}`);
+      }} />
     </div>;
 }
 function AnimatedRoutes() {

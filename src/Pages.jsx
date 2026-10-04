@@ -15,21 +15,86 @@ import asset_newsign_png from "./assets/newsign.png";
 import aboutStyles from './about.css?inline';
 import socialStyles from './socials.css?inline';
 import BgVideo from './BgVideo.jsx';
-import asset_Sys_Cursor_wav from "./assets/Sys_Cursor.wav";
+import asset_open_ui_wav from "./assets/open_ui.wav";
+import asset_enter_ui_wav from "./assets/enter_ui.wav";
+import asset_navigation_ui_wav from "./assets/navigation_ui.wav";
+import asset_back_ui_wav from "./assets/back_ui.wav";
 
-// Cursor sound for hovering / cycling through buttons.
+// ─────────────────────────────────────────────
+// UI sounds
+//   open_ui        menu screen appears (also when coming back to it)
+//   enter_ui       a button is clicked / confirmed
+//   back_ui        the visitor goes back (Esc, Backspace, ←, BACK button)
+//   navigation_ui  hovering or cycling through elements
+// Every play uses a fresh copy of the sound, so sounds are never cut off:
+// quick repeats layer on top of each other until each one finishes.
 // Browsers block sound until the visitor has clicked or pressed a key once,
 // so the very first hover can be silent. That is normal.
-let cursorSfx = null;
-export function playCursor() {
+// ─────────────────────────────────────────────
+const makeSfx = src => {
+  const a = new Audio(src);
+  a.preload = "auto";
+  return a;
+};
+const SFX = {
+  open: { audio: makeSfx(asset_open_ui_wav), volume: 0.6 },
+  enter: { audio: makeSfx(asset_enter_ui_wav), volume: 0.6 },
+  nav: { audio: makeSfx(asset_navigation_ui_wav), volume: 0.5 }, // volume: 0 = silent, 1 = full
+  back: { audio: makeSfx(asset_back_ui_wav), volume: 0.6 }
+};
+function playSfx(name) {
   try {
-    if (!cursorSfx) {
-      cursorSfx = new Audio(asset_Sys_Cursor_wav);
-      cursorSfx.volume = 0.5; // 0 = silent, 1 = full volume
-    }
-    cursorSfx.currentTime = 0;
-    cursorSfx.play().catch(() => {});
-  } catch (err) {}
+    const copy = SFX[name].audio.cloneNode();
+    copy.volume = SFX[name].volume;
+    return copy.play();
+  } catch (err) {
+    return undefined;
+  }
+}
+export const playNav = () => {
+  playSfx("nav");
+};
+export const playEnter = () => {
+  playSfx("enter");
+};
+export const playBack = () => {
+  playSfx("back");
+};
+
+// open_ui: plays when the menu screen shows. If the browser blocks it (no click
+// or key press yet on a fresh page load), it plays on the visitor's first key
+// press or click instead, as long as they are still on the menu.
+let lastOpenAt = 0;
+let openArmed = false;
+const onMenuScreen = () => {
+  const h = window.location.hash;
+  return h === "" || h === "#" || h === "#/";
+};
+function unlockOpen(e) {
+  if (e.type === "keydown" && e.key === "Enter") return;
+  if (e.target && e.target.closest && e.target.closest(".p3-row")) return;
+  disarmOpen();
+  if (onMenuScreen()) playSfx("open");
+}
+function disarmOpen() {
+  window.removeEventListener("pointerdown", unlockOpen);
+  window.removeEventListener("keydown", unlockOpen);
+  openArmed = false;
+}
+export function playOpenOnStart() {
+  const now = Date.now();
+  if (now - lastOpenAt < 400) return; // React StrictMode runs effects twice in dev
+  lastOpenAt = now;
+  disarmOpen();
+  const result = playSfx("open");
+  if (result && result.catch) {
+    result.catch(() => {
+      if (openArmed) return;
+      openArmed = true;
+      window.addEventListener("pointerdown", unlockOpen);
+      window.addEventListener("keydown", unlockOpen);
+    });
+  }
 }
 // About page
 const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
@@ -128,6 +193,7 @@ export function AboutMe() {
   const navigate = useNavigate();
   const isMobileViewport = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
   const handleBarClick = index => {
+    playEnter();
     if (isMobileViewport && active === index) {
       setRevealed(prev => !prev);
       return;
@@ -144,19 +210,26 @@ export function AboutMe() {
   useEffect(() => {
     const onKey = e => {
       if (e.key === "ArrowUp" && active > 0) {
-        playCursor();
+        playNav();
         setActive(active - 1);
       }
       if (e.key === "ArrowDown" && active < ABOUTME_ITEMS.length - 1) {
-        playCursor();
+        playNav();
         setActive(active + 1);
       }
-      if (e.key === "Enter") setRevealed(true);
+      if (e.key === "Enter") {
+        playEnter();
+        setRevealed(true);
+      }
       if (e.key === "ArrowRight") setRevealed(true);
       if (e.key === "ArrowLeft") {
+        playBack();
         if (revealed) setRevealed(false);else navigate(-1);
       }
-      if (e.key === "Escape" || e.key === "Backspace") navigate(-1);
+      if (e.key === "Escape" || e.key === "Backspace") {
+        playBack();
+        navigate(-1);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -186,7 +259,7 @@ export function AboutMe() {
         {ABOUTME_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
         handleBarClick(i);
       }} onMouseEnter={() => {
-        if (active !== i) playCursor();
+        if (active !== i) playNav();
         setActive(i);
       }}>
             <div className="sc-bar-red" />
@@ -213,10 +286,16 @@ export function AboutMe() {
       </div>
 
       <div className="sc-mobile-controls" aria-label="About mobile controls">
-        <button className="sc-mobile-btn" type="button" onClick={() => navigate(-1)}>
+        <button className="sc-mobile-btn" type="button" onClick={() => {
+          playBack();
+          navigate(-1);
+        }}>
           BACK
         </button>
-        <button className="sc-mobile-btn" type="button" onClick={() => setRevealed(prev => !prev)}>
+        <button className="sc-mobile-btn" type="button" onClick={() => {
+          if (revealed) playBack();else playEnter();
+          setRevealed(prev => !prev);
+        }}>
           {revealed ? "HIDE" : "REVEAL"}
         </button>
       </div>
@@ -316,32 +395,44 @@ export function Socials() {
     const onKey = e => {
       if (focus === "left") {
         if (e.key === "ArrowUp" && active > 0) {
-          playCursor();
+          playNav();
           setActive(active - 1);
         }
         if (e.key === "ArrowDown" && active < SOCIALS_ITEMS.length - 1) {
-          playCursor();
+          playNav();
           setActive(active + 1);
         }
         if (e.key === "ArrowRight") {
           setFocus("right");
           setActiveInfoBar(0);
         }
-        if (e.key === "Enter") window.open(SOCIALS_ITEMS[active].href, "_blank");
+        if (e.key === "Enter") {
+          playEnter();
+          window.open(SOCIALS_ITEMS[active].href, "_blank");
+        }
       } else {
         const barCount = SOCIALS_ITEMS[active].bars;
         if (e.key === "ArrowUp" && activeInfoBar > 0) {
-          playCursor();
+          playNav();
           setActiveInfoBar(activeInfoBar - 1);
         }
         if (e.key === "ArrowDown" && activeInfoBar < barCount - 1) {
-          playCursor();
+          playNav();
           setActiveInfoBar(activeInfoBar + 1);
         }
-        if (e.key === "ArrowLeft") setFocus("left");
-        if (e.key === "Enter") window.open("https://" + SOCIALS_ITEMS[active].links[activeInfoBar], "_blank");
+        if (e.key === "ArrowLeft") {
+          playBack();
+          setFocus("left");
+        }
+        if (e.key === "Enter") {
+          playEnter();
+          window.open("https://" + SOCIALS_ITEMS[active].links[activeInfoBar], "_blank");
+        }
       }
-      if (e.key === "ArrowLeft" && focus === "left" || e.key === "Escape" || e.key === "Backspace") navigate(-1);
+      if (e.key === "ArrowLeft" && focus === "left" || e.key === "Escape" || e.key === "Backspace") {
+        playBack();
+        navigate(-1);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -352,9 +443,10 @@ export function Socials() {
 
       <div className="sc-root" role="navigation">
         {SOCIALS_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
+        playEnter();
         if (active === i) window.open(item.href, "_blank");else setActive(i);
       }} onMouseEnter={() => {
-        if (active !== i) playCursor();
+        if (active !== i) playNav();
         setActive(i);
       }}>
             <div className="sc-bar-red" />
@@ -406,13 +498,14 @@ export function Socials() {
       }).map((_, i) => <div className={`sc-info-bar-wrap${activeInfoBar === i ? " selected" : ""}`} key={`bar-${active}-${i}`} style={{
         animationDelay: `${i * 50}ms`
       }} onClick={() => {
+        playEnter();
         if (isMobileViewport || activeInfoBar === i) {
           window.open("https://" + SOCIALS_ITEMS[active].links[i], "_blank");
           return;
         }
         setActiveInfoBar(i);
       }} onMouseEnter={() => {
-        if (activeInfoBar !== i) playCursor();
+        if (activeInfoBar !== i) playNav();
         setActiveInfoBar(i);
       }}>
               {SOCIALS_ITEMS[active].newBars.includes(i) && <img className="sc-info-bar-new" src={asset_newsign_png} alt="" />}
@@ -432,10 +525,16 @@ export function Socials() {
       </div>
 
       <div className="sc-mobile-controls" aria-label="Socials mobile controls">
-        <button className="sc-mobile-btn" type="button" onClick={() => navigate(-1)}>
+        <button className="sc-mobile-btn" type="button" onClick={() => {
+          playBack();
+          navigate(-1);
+        }}>
           BACK
         </button>
-        <button className="sc-mobile-btn" type="button" onClick={() => window.open(SOCIALS_ITEMS[active].href, "_blank")}>
+        <button className="sc-mobile-btn" type="button" onClick={() => {
+          playEnter();
+          window.open(SOCIALS_ITEMS[active].href, "_blank");
+        }}>
           OPEN
         </button>
       </div>
