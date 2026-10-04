@@ -392,50 +392,45 @@ const ABOUTME_ITEMS = [{
   }]
 }];
 
-// Safety patch for the About detail card. The card's pop-in animations start at opacity 0 and
-// used fill-mode "both", so if a browser/GPU never runs the animation (seen on some Edge + Windows
-// setups) the card stays invisible even though it is in the page. "backwards" keeps the pop-in but
-// falls back to the normal, visible styles if the animation doesn't run.
-// The drop-shadow filter on the clipped card is also removed, since it is a known paint-bug trigger.
-const aboutPatch = `
-.ad-panel { filter: none !important; animation-fill-mode: backwards !important; }
-.ad-shell { animation-fill-mode: backwards !important; }
-.ad-row, .ad-item, .ad-tag, .ad-text { animation-fill-mode: backwards !important; }
-`;
+// Ad blockers (uBlock, AdBlock, Edge's built-in blockers...) hide anything whose class starts with "ad-".
+// That is why the About detail card was in the page but invisible. The card's classes are now "abt-*" in
+// this file, and the matching selectors in about.css (still written as ".ad-*") are renamed here so
+// about.css doesn't need to change.
+const aboutCss = aboutStyles.replace(/\.ad-/g, ".abt-");
 
 // The card that shows on the right side of the About page.
 function AboutDetail({ item, index, chip }) {
   let n = 0; // counts rows so they pop in one after another
   const delay = () => ({ animationDelay: `${120 + n++ * 55}ms` });
-  return <aside className="ad-panel">
-      <div className="ad-shell" key={item.id}>
-        <div className="ad-head">
-          <span className="ad-index">{String(index + 1).padStart(2, "0")}</span>
-          <span className="ad-title">{item.label}</span>
-          <span className="ad-chip">{chip}</span>
+  return <aside className="abt-panel">
+      <div className="abt-shell" key={item.id}>
+        <div className="abt-head">
+          <span className="abt-index">{String(index + 1).padStart(2, "0")}</span>
+          <span className="abt-title">{item.label}</span>
+          <span className="abt-chip">{chip}</span>
         </div>
-        <div className="ad-body">
-          {item.sections.map(sec => <section className="ad-sec" key={sec.title}>
-              <div className="ad-sec-title"><i />{sec.title}<b /></div>
-              {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="ad-row" style={delay()} key={k}>
-                  <span className="ad-k">{k}</span>
-                  <span className="ad-v">{v}</span>
+        <div className="abt-body">
+          {item.sections.map(sec => <section className="abt-sec" key={sec.title}>
+              <div className="abt-sec-title"><i />{sec.title}<b /></div>
+              {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="abt-row" style={delay()} key={k}>
+                  <span className="abt-k">{k}</span>
+                  <span className="abt-v">{v}</span>
                 </div>)}
-              {sec.type === "text" && sec.paragraphs.map((t, k) => <p className="ad-text" style={delay()} key={k}>{t}</p>)}
-              {sec.type === "tags" && <div className="ad-tags">
-                  {sec.tags.map(t => <span className="ad-tag" style={delay()} key={t}>{t}</span>)}
+              {sec.type === "text" && sec.paragraphs.map((t, k) => <p className="abt-text" style={delay()} key={k}>{t}</p>)}
+              {sec.type === "tags" && <div className="abt-tags">
+                  {sec.tags.map(t => <span className="abt-tag" style={delay()} key={t}>{t}</span>)}
                 </div>}
-              {sec.type === "list" && sec.items.map((it, k) => <div className="ad-item" style={delay()} key={k}>
-                  <div className="ad-icon-wrap">
-                    <div className="ad-icon">
+              {sec.type === "list" && sec.items.map((it, k) => <div className="abt-item" style={delay()} key={k}>
+                  <div className="abt-icon-wrap">
+                    <div className="abt-icon">
                       {typeof it.icon === "string" && it.icon.length > 3 ? <img src={it.icon} alt="" /> : it.icon}
                     </div>
                   </div>
-                  <div className="ad-item-text">
-                    <div className="ad-name">{it.name}</div>
-                    {it.detail && <div className="ad-detail">{it.detail}</div>}
+                  <div className="abt-item-text">
+                    <div className="abt-name">{it.name}</div>
+                    {it.detail && <div className="abt-detail">{it.detail}</div>}
                   </div>
-                  {it.credit && <span className={`ad-credit${it.mine ? " mine" : ""}`}>{it.credit}</span>}
+                  {it.credit && <span className={`abt-credit${it.mine ? " mine" : ""}`}>{it.credit}</span>}
                 </div>)}
             </section>)}
         </div>
@@ -500,7 +495,7 @@ export function AboutMe() {
   return <div id="menu-screen">
       <BgVideo src={VIDEO.about} poster={poster_main1} />
       {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
-      <style>{aboutStyles + aboutPatch}</style>
+      <style>{aboutCss}</style>
       <div className={`pg-title${mounted ? " mounted" : ""}`}>ABOUT ME</div>
 
       <div className="sc-root" role="navigation">
