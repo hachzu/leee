@@ -8,7 +8,7 @@ import asset_main3_mp4 from "./assets/main3.mp4";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { AboutMe, Socials, playNav, playEnter, playBack, playOpenOnStart } from './Pages.jsx';
+import { AboutMe, Socials, Splash, WebDeck, playNav, playEnter, playBack, playOpenOnStart } from './Pages.jsx';
 import './styles.css';
 import BgVideo from './BgVideo.jsx';
 
@@ -540,7 +540,13 @@ function AnimatedRoutes() {
     </AnimatePresence>;
 }
 function App() {
-  return <AnimatedRoutes />;
+  const [entered, setEntered] = useState(false);
+  // The CONTINUE click lets the browser play sound, so the deck and menu sounds can start after it.
+  if (!entered) return <Splash onContinue={() => setEntered(true)} />;
+  return <>
+      <AnimatedRoutes />
+      <WebDeck />
+    </>;
 }
 
 // Hash routes work in subfolders and survive refresh on static hosts.
