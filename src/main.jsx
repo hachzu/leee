@@ -5,10 +5,13 @@ import asset_Mainn_mp4 from "./assets/Mainn.mp4";
 import asset_main1_mp4 from "./assets/main1.mp4";
 import asset_main2_mp4 from "./assets/main2.mp4";
 import asset_main3_mp4 from "./assets/main3.mp4";
+import poster_Mainn from "./assets/Mainn_poster.jpg";
+import poster_main1 from "./assets/main1_poster.jpg";
+import poster_main2 from "./assets/main2_poster.jpg";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { AboutMe, Socials, Splash, WebDeck, playNav, playEnter, playBack, playOpenOnStart } from './Pages.jsx';
+import { AboutMe, Socials, Splash, WebDeck, playNav, playEnter, playBack, playOpenOnStart, getMenuVideoSrc, warmVideos, VIDEO } from './Pages.jsx';
 import './styles.css';
 import BgVideo from './BgVideo.jsx';
 
@@ -228,6 +231,7 @@ const RESUMEPAGE_EDUCATION_ROWS = [{
 }];
 function ResumePage({
   src,
+  poster,
   title = "LIST"
 }) {
   const navigate = useNavigate();
@@ -256,9 +260,9 @@ function ResumePage({
     return () => window.removeEventListener("keydown", onKey);
   }, [navigate, active]);
   return <div id="menu-screen">
-      <BgVideo src={src} />
+      <BgVideo src={src} poster={poster} />
       <div className="resume-entry-mask" aria-hidden="true">
-        <BgVideo className="resume-entry-video" src={src} />
+        <BgVideo className="resume-entry-video" src={src} poster={poster} />
       </div>
 
       <div className="resume-overlay">
@@ -525,7 +529,7 @@ function MenuScreen() {
     playOpenOnStart(); // plays every time the menu screen shows
   }, []);
   return <div id="menu-screen">
-      <BgVideo src={asset_Mainn_mp4} />
+      <BgVideo src={getMenuVideoSrc()} poster={poster_Mainn} />
       <P3Menu onNavigate={page => {
         playEnter();
         navigate(`/${page}`);
@@ -542,17 +546,20 @@ function AnimatedRoutes() {
 
         {/* New menu pages. Both reuse the Resume template as a placeholder.
             Replace ResumePage with your own SkillsPage / BlogsPage later. */}
-        <Route path="/skills" element={<PageTransition><ResumePage src={asset_main2_mp4} title="SKILLS" /></PageTransition>} />
-        <Route path="/blogs" element={<PageTransition><ResumePage src={asset_main1_mp4} title="BLOGS" /></PageTransition>} />
+        <Route path="/skills" element={<PageTransition><ResumePage src={VIDEO.skills} poster={poster_main2} title="SKILLS" /></PageTransition>} />
+        <Route path="/blogs" element={<PageTransition><ResumePage src={VIDEO.about} poster={poster_main1} title="BLOGS" /></PageTransition>} />
 
         {/* Original Resume page, kept as a template. Not linked from the menu,
             but still reachable at /#/resume */}
-        <Route path="/resume" element={<PageTransition><ResumePage src={asset_main2_mp4} title="RESUME" /></PageTransition>} />
+        <Route path="/resume" element={<PageTransition><ResumePage src={VIDEO.skills} poster={poster_main2} title="RESUME" /></PageTransition>} />
       </Routes>
     </AnimatePresence>;
 }
 function App() {
   const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (entered) warmVideos();
+  }, [entered]);
   // The CONTINUE click lets the browser play sound, so the deck and menu sounds can start after it.
   if (!entered) return <Splash onContinue={() => setEntered(true)} />;
   return <>

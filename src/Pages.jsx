@@ -5,6 +5,16 @@ import asset_char2_png from "./assets/char2.png";
 import asset_char3_png from "./assets/char3.png";
 import asset_main1_mp4 from "./assets/main1.mp4";
 import asset_main3_mp4 from "./assets/main3.mp4";
+import asset_Mainn_mp4 from "./assets/Mainn.mp4";
+import asset_main2_mp4 from "./assets/main2.mp4";
+import poster_Mainn from "./assets/Mainn_poster.jpg";
+import poster_main1 from "./assets/main1_poster.jpg";
+import poster_main2 from "./assets/main2_poster.jpg";
+import poster_main3 from "./assets/main3_poster.jpg";
+import lite_Mainn from "./assets/Mainn_lite.mp4";
+import lite_main1 from "./assets/main1_lite.mp4";
+import lite_main2 from "./assets/main2_lite.mp4";
+import lite_main3 from "./assets/main3_lite.mp4";
 import aboutStyles from './about.css?inline';
 import socialStyles from './socials.css?inline';
 import BgVideo from './BgVideo.jsx';
@@ -27,26 +37,61 @@ import asset_launch_ui_wav from "./assets/launch_ui.wav";
 // Browsers block sound until the visitor has clicked or pressed a key once,
 // so the very first hover can be silent. That is normal.
 // ─────────────────────────────────────────────
-const makeSfx = src => {
-  const a = new Audio(src);
-  a.preload = "auto";
-  return a;
+const SFX_DEFS = {
+  open: { src: asset_open_ui_wav, volume: 0.6 },
+  enter: { src: asset_enter_ui_wav, volume: 0.6 },
+  nav: { src: asset_navigation_ui_wav, volume: 0.5 }, // volume: 0 = silent, 1 = full
+  back: { src: asset_back_ui_wav, volume: 0.6 },
+  deck: { src: asset_deck_ui_wav, volume: 0.5 },
+  launch: { src: asset_launch_ui_wav, volume: 0.6 } // opening a social link
 };
-const SFX = {
-  open: { audio: makeSfx(asset_open_ui_wav), volume: 0.6 },
-  enter: { audio: makeSfx(asset_enter_ui_wav), volume: 0.6 },
-  nav: { audio: makeSfx(asset_navigation_ui_wav), volume: 0.5 }, // volume: 0 = silent, 1 = full
-  back: { audio: makeSfx(asset_back_ui_wav), volume: 0.6 },
-  deck: { audio: makeSfx(asset_deck_ui_wav), volume: 0.5 },
-  launch: { audio: makeSfx(asset_launch_ui_wav), volume: 0.6 } // opening a social link
-};
+
+// Sounds are downloaded and decoded once into memory (Web Audio), then played from there.
+let audioCtx = null;
+const buffers = {};
+function getCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+  }
+  return audioCtx;
+}
+export function resumeAudio() {
+  const c = getCtx();
+  if (c && c.state !== "running") {
+    return c.resume().catch(() => {});
+  }
+  return Promise.resolve();
+}
+function unlockAudioOnGesture() {
+  resumeAudio();
+  if (audioCtx && audioCtx.state === "running") {
+    ["pointerdown", "keydown", "touchend"].forEach(t => window.removeEventListener(t, unlockAudioOnGesture));
+  }
+}
+["pointerdown", "keydown", "touchend"].forEach(t => window.addEventListener(t, unlockAudioOnGesture));
+
+// Returns true if the sound started, false if it could not (not loaded yet, or the browser still blocks audio).
 function playSfx(name) {
+  const c = audioCtx;
+  const buf = buffers[name];
+  if (!c || !buf) return false;
+  if (c.state !== "running") {
+    c.resume().catch(() => {});
+    return false;
+  }
   try {
-    const copy = SFX[name].audio.cloneNode();
-    copy.volume = SFX[name].volume;
-    return copy.play();
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const gain = c.createGain();
+    gain.gain.value = SFX_DEFS[name].volume;
+    src.connect(gain);
+    gain.connect(c.destination);
+    src.start(0);
+    return true;
   } catch (err) {
-    return undefined;
+    return false;
   }
 }
 export const playNav = () => {
@@ -68,9 +113,9 @@ export const playLaunch = () => {
   playSfx("launch");
 };
 
-// open_ui: plays when the menu screen shows. If the browser blocks it (no click
-// or key press yet on a fresh page load), it plays on the visitor's first key
-// press or click instead, as long as they are still on the menu.
+// open_ui: plays when the menu screen shows. If the browser still blocks audio
+// (no click or key press yet), it plays on the visitor's first key press or
+// click instead, as long as they are still on the menu.
 let lastOpenAt = 0;
 let openArmed = false;
 const onMenuScreen = () => {
@@ -81,7 +126,9 @@ function unlockOpen(e) {
   if (e.type === "keydown" && e.key === "Enter") return;
   if (e.target && e.target.closest && e.target.closest(".p3-row")) return;
   disarmOpen();
-  if (onMenuScreen()) playSfx("open");
+  resumeAudio().then(() => {
+    if (onMenuScreen()) playSfx("open");
+  });
 }
 function disarmOpen() {
   window.removeEventListener("pointerdown", unlockOpen);
@@ -93,16 +140,171 @@ export function playOpenOnStart() {
   if (now - lastOpenAt < 400) return; // React StrictMode runs effects twice in dev
   lastOpenAt = now;
   disarmOpen();
-  const result = playSfx("open");
-  if (result && result.catch) {
-    result.catch(() => {
-      if (openArmed) return;
-      openArmed = true;
-      window.addEventListener("pointerdown", unlockOpen);
-      window.addEventListener("keydown", unlockOpen);
-    });
+  if (!playSfx("open")) {
+    if (openArmed) return;
+    openArmed = true;
+    window.addEventListener("pointerdown", unlockOpen);
+    window.addEventListener("keydown", unlockOpen);
   }
 }
+
+// Phones, narrow screens, Data Saver and slow connections get the small 720p videos.
+// Everyone else gets the full-quality ones. Decided once when the page loads.
+const USE_LITE_VIDEO = (() => {
+  try {
+    if (window.matchMedia("(max-width: 768px)").matches) return true;
+    const c = navigator.connection;
+    if (c && (c.saveData || ["slow-2g", "2g", "3g"].includes(c.effectiveType))) return true;
+  } catch (err) {}
+  return false;
+})();
+export const VIDEO = {
+  menu: USE_LITE_VIDEO ? lite_Mainn : asset_Mainn_mp4,
+  about: USE_LITE_VIDEO ? lite_main1 : asset_main1_mp4,
+  skills: USE_LITE_VIDEO ? lite_main2 : asset_main2_mp4,
+  socials: USE_LITE_VIDEO ? lite_main3 : asset_main3_mp4
+};
+
+// ─────────────────────────────────────────────
+// Preloading
+//   preloadEssentials: runs on the CONTINUE screen. Loads the sounds, the images
+//     and posters, and the menu video (kept in memory as a blob so the menu never shows black).
+//   warmVideos: after entering, quietly downloads the other videos so the browser caches them.
+//   Both skip the big downloads when the visitor has Data Saver on or a 2G connection.
+// ─────────────────────────────────────────────
+const PRELOAD_TIMEOUT_MS = 20000;
+let menuVideoUrl = VIDEO.menu;
+export const getMenuVideoSrc = () => menuVideoUrl;
+
+function isSlowConnection() {
+  const c = navigator.connection;
+  if (!c) return false;
+  return !!c.saveData || c.effectiveType === "slow-2g" || c.effectiveType === "2g";
+}
+
+async function loadSfxBuffers(onEach) {
+  const c = getCtx();
+  const names = Object.keys(SFX_DEFS);
+  if (!c) {
+    names.forEach(() => onEach());
+    return;
+  }
+  await Promise.all(names.map(async name => {
+    try {
+      const res = await fetch(SFX_DEFS[name].src);
+      const data = await res.arrayBuffer();
+      buffers[name] = await new Promise((resolve, reject) => c.decodeAudioData(data, resolve, reject));
+    } catch (err) {}
+    onEach();
+  }));
+}
+
+async function fetchBlobWithProgress(url, onFrac) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("bad response");
+  const total = Number(res.headers.get("content-length")) || 0;
+  if (!res.body || !res.body.getReader) {
+    const b = await res.blob();
+    onFrac(1);
+    return b;
+  }
+  const reader = res.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    if (total) onFrac(Math.min(0.99, got / total));
+  }
+  onFrac(1);
+  return new Blob(chunks, { type: res.headers.get("content-type") || "video/mp4" });
+}
+
+let essentialsPromise = null;
+let essentialsProgress = 0;
+let progressListener = null;
+function reportProgress(v) {
+  essentialsProgress = Math.max(essentialsProgress, v);
+  if (progressListener) progressListener(essentialsProgress);
+}
+
+async function runPreload() {
+  const slow = isSlowConnection();
+  const weights = { sfx: 12, img: 14 };
+  if (!slow) weights.video = 60;
+  const frac = { sfx: 0, img: 0, video: 0 };
+  const report = () => {
+    let total = 0;
+    let got = 0;
+    for (const k in weights) {
+      total += weights[k];
+      got += weights[k] * (frac[k] || 0);
+    }
+    reportProgress(total ? Math.round((got / total) * 100) : 100);
+  };
+
+  const sfxCount = Object.keys(SFX_DEFS).length;
+  const images = [asset_char1_png, asset_char2_png, asset_char3_png, poster_Mainn, poster_main1, poster_main2, poster_main3];
+  let sfxDone = 0;
+  let imgDone = 0;
+
+  const jobs = [
+    loadSfxBuffers(() => {
+      sfxDone++;
+      frac.sfx = sfxDone / sfxCount;
+      report();
+    }),
+    Promise.all(images.map(src => new Promise(resolve => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        imgDone++;
+        frac.img = imgDone / images.length;
+        report();
+        resolve();
+      };
+      img.src = src;
+    })))
+  ];
+  if (!slow) {
+    jobs.push(fetchBlobWithProgress(VIDEO.menu, f => {
+      frac.video = f;
+      report();
+    }).then(blob => {
+      menuVideoUrl = URL.createObjectURL(blob);
+    }).catch(() => {}).then(() => {
+      frac.video = 1;
+      report();
+    }));
+  }
+  await Promise.all(jobs);
+}
+
+export function preloadEssentials(listener) {
+  progressListener = listener || null;
+  if (listener) listener(essentialsProgress);
+  if (!essentialsPromise) essentialsPromise = runPreload();
+  return essentialsPromise;
+}
+
+let warmStarted = false;
+export function warmVideos() {
+  if (warmStarted) return;
+  warmStarted = true;
+  if (isSlowConnection()) return;
+  const urls = [VIDEO.about, VIDEO.socials, VIDEO.skills]; // About, Socials, Skills in that order
+  setTimeout(async () => {
+    for (const u of urls) {
+      try {
+        const res = await fetch(u, { priority: "low" });
+        const reader = res.body.getReader();
+        while (!(await reader.read()).done) {}
+      } catch (err) {}
+    }
+  }, 3000);
+}
+
 // About page
 const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
 
@@ -282,7 +484,7 @@ export function AboutMe() {
     return () => window.removeEventListener("keydown", onKey);
   }, [active, navigate, revealed]);
   return <div id="menu-screen">
-      <BgVideo src={asset_main1_mp4} />
+      <BgVideo src={VIDEO.about} poster={poster_main1} />
       {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
       <style>{aboutStyles}</style>
       <div className={`pg-title${mounted ? " mounted" : ""}`}>ABOUT ME</div>
@@ -487,7 +689,7 @@ export function Socials() {
   const cur = SOCIALS_ITEMS[active];
 
   return <div id="menu-screen">
-      <BgVideo src={asset_main3_mp4} />
+      <BgVideo src={VIDEO.socials} poster={poster_main3} />
       <style>{socialStyles}</style>
 
       <div className="so-page">
@@ -571,18 +773,60 @@ export function Socials() {
 export function Splash({ onContinue }) {
   const [leaving, setLeaving] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+  const readyRef = useRef(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 300);
     return () => clearTimeout(t);
   }, []);
 
-  const go = () => {
-    if (leaving) return;
+  // load everything important while the visitor looks at this screen
+  useEffect(() => {
+    let alive = true;
+    const finish = () => {
+      if (!alive) return;
+      readyRef.current = true;
+      setReady(true);
+    };
+    const cap = setTimeout(finish, PRELOAD_TIMEOUT_MS); // never make anyone wait forever
+    preloadEssentials(p => {
+      if (alive) setProgress(p);
+    }).then(() => {
+      clearTimeout(cap);
+      if (alive) setProgress(100);
+      finish();
+    });
+    return () => {
+      alive = false;
+      clearTimeout(cap);
+    };
+  }, []);
+
+  const proceed = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
     playEnter();
     setLeaving(true);
     setTimeout(onContinue, 250); // the menu's own page transition plays right after
   };
+
+  const go = () => {
+    if (startedRef.current) return;
+    const unlocked = resumeAudio(); // this click is what lets the browser play sound
+    if (!readyRef.current) {
+      setWaiting(true); // still loading: continue automatically as soon as it is done
+      return;
+    }
+    unlocked.then(proceed);
+  };
+
+  useEffect(() => {
+    if (ready && waiting) resumeAudio().then(proceed);
+  }, [ready, waiting]);
 
   useEffect(() => {
     const onKey = e => {
@@ -593,7 +837,7 @@ export function Splash({ onContinue }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [leaving]);
+  }, []);
 
   return <div className={`sp-root${mounted ? " mounted" : ""}${leaving ? " leaving" : ""}`}>
       <button className="sp-btn" type="button" onClick={go}>
@@ -602,6 +846,10 @@ export function Splash({ onContinue }) {
         <span className="sp-label sp-label-dark">CONTINUE</span>
         <span className="sp-label sp-label-bright">CONTINUE</span>
       </button>
+      <div className={`sp-load${ready ? " done" : ""}${waiting && !ready ? " waiting" : ""}`} aria-hidden="true">
+        <div className="sp-load-track"><div className="sp-load-fill" style={{ width: `${progress}%` }} /></div>
+        <div className="sp-load-text">{ready ? "READY" : `LOADING ${progress}%`}</div>
+      </div>
       <div className="sp-hint"><span className="sp-hint-key">↵</span><span>CONTINUE</span></div>
     </div>;
 }

@@ -1411,3 +1411,43 @@ button.wd-play, button.wd-toggle, button.wd-mini {
 
 /* Page-transition panels never take the mouse, even while they animate. */
 .pt-overlay, .pt-overlay * { pointer-events: none !important; }
+
+/* ─── Splash loading bar ─── */
+.sp-load {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + clamp(70px, 11vw, 100px));
+  width: min(320px, 70vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.5s ease 0.4s;
+  pointer-events: none;
+}
+.sp-root.mounted .sp-load { opacity: 1; }
+.sp-root.leaving .sp-load { opacity: 0; transition-delay: 0s; }
+.sp-load-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  transform: skewX(-20deg);
+}
+.sp-load-fill {
+  height: 100%;
+  width: 0;
+  background: #fff;
+  box-shadow: 3px 0 0 #c4001a;
+  transition: width 0.25s ease;
+}
+.sp-load-text {
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2.5px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+}
+.sp-load.waiting .sp-load-text { color: #fff; }
+.sp-load.done .sp-load-text { color: #3ce2ff; }
