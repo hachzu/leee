@@ -1383,3 +1383,31 @@ button.wd-play, button.wd-toggle, button.wd-mini {
 .wd-vol-row { height: 30px; padding-top: 0; }
 .wd-vol-btn { min-width: 56px; font-family: 'Bebas Neue', sans-serif !important; font-size: 15px; letter-spacing: 1.5px; text-align: left; }
 .wd-vol { cursor: pointer; height: 10px; touch-action: none; }
+
+/* Big faded index number of the active menu button, left side under the name tag, upright (0 degrees) */
+.p3-index {
+  position: absolute;
+  left: 1.5vw;
+  top: 40vh;
+  z-index: 15;
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(150px, 32vh, 340px);
+  line-height: 0.8;
+  letter-spacing: 4px;
+  color: rgba(0, 0, 0, 0.5);
+  mix-blend-mode: multiply;
+  user-select: none;
+  pointer-events: none;
+  animation: p3-index-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes p3-index-in {
+  0%   { opacity: 0; transform: translateX(-60px) scale(0.9); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@media (max-width: 768px) {
+  .p3-index { top: 34vh; font-size: clamp(90px, 20vh, 150px); }
+}
+
+/* Page-transition panels never take the mouse, even while they animate. */
+.pt-overlay, .pt-overlay * { pointer-events: none !important; }

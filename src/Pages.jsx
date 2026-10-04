@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import asset_char1_png from "./assets/char1.png";
 import asset_char2_png from "./assets/char2.png";
@@ -7,9 +7,6 @@ import asset_main1_mp4 from "./assets/main1.mp4";
 import asset_icon1_png from "./assets/icon1.png";
 import asset_icon2_png from "./assets/icon2.png";
 import asset_icon3_png from "./assets/icon3.png";
-import asset_mainm_jpeg from "./assets/mainm.jpeg";
-import asset_mainm2_jpeg from "./assets/mainm2.jpeg";
-import asset_mainf_jpeg from "./assets/mainf.jpeg";
 import asset_main3_mp4 from "./assets/main3.mp4";
 import asset_newsign_png from "./assets/newsign.png";
 import aboutStyles from './about.css?inline';
@@ -107,94 +104,131 @@ export function playOpenOnStart() {
 }
 // About page
 const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
-const ABOUTME_MAIN_IMAGES = [asset_mainm_jpeg, asset_mainm2_jpeg, asset_mainf_jpeg];
-const ABOUTME_REVEAL_CONTENT = [{
-  upper: ["name moneybagg", "age:23"],
-  lower: "major: computer science"
-}, {
-  upper: ["Cleopatra lived closer to the Moon landing than to the building of the pyramids.", "Vikings kept cats on ships for pest control (and vibes).", "In medieval Europe, animals could be put on trial for crimes"],
-  lower: "abbove is some history fun fact"
-}, {
-  upper: ["Oxford University founding is older than the Aztec Empire.", "The shortest war in history lasted 38–45 minutes (Britain vs Zanzibar).", "Humans have been writing for ~5,000 years"],
-  lower: "yes it's a place holder"
-}];
-const ABOUTME_ROLES = [{
-  text: "LEADER",
-  color: "#e8c100",
-  bg: "rgba(232,193,0,0.12)",
-  border: "rgba(232,193,0,0.5)"
-}, {
-  text: "PARTY",
-  color: "#4a8fff",
-  bg: "rgba(74,143,255,0.12)",
-  border: "rgba(74,143,255,0.5)"
-}, {
-  text: "PARTY",
-  color: "#4a8fff",
-  bg: "rgba(74,143,255,0.12)",
-  border: "rgba(74,143,255,0.5)"
-}];
+
+// Buttons on the About page (all text below is placeholder).
+//   label  - text on the bar and the card title
+//   role   - the tilted word on the left of the bar
+//   group  - puts a divider with this title above the button (also shown on the card)
+//   sections - what the card on the right shows. Each section has a title and a type:
+//     "rows" : rows: [["LABEL", "value"], ...]
+//     "tags" : tags: ["one", "two"]
+//     "text" : paragraphs: ["first paragraph", "second paragraph", ...]  (free writing, e.g. your introduction)
+//     "list" : items: [{ icon, name, detail, credit, mine }]
+//              icon = a short symbol/emoji, or an imported image
+//              credit = small tag on the right (e.g. "ART BY @artist"); mine: true makes it blue
+// Characters repeat in order if there are more buttons than images.
 const ABOUTME_ITEMS = [{
-  id: "twitch",
-  label: "ABOUT ME",
-  handle: "@yourname",
-  href: "https://twitch.tv/yourname",
-  icon: "🎮",
-  barIcon: asset_icon1_png,
-  bars: 1,
-  newBars: [0],
-  counts: ["56"],
-  links: ["twitch.tv/videos/2041837265"],
-  stats: [{
-    tag: "FOL",
-    value: "1.2K",
-    color: "#9147ff"
+  id: "profile",
+  label: "PROFILE",
+  role: "LEADER",
+  sections: [{
+    title: "INTRODUCTION",
+    type: "text",
+    paragraphs: ["hi, i'm moneybagg. write your introduction here.", "add as many paragraphs as you like, each string is its own paragraph."]
   }, {
-    tag: "VWR",
-    value: "042",
-    color: "#bf94ff"
+    title: "BASIC INFO",
+    type: "rows",
+    rows: [["NAME", "moneybagg"], ["YEAR", "placeholder"], ["BIRTHDAY", "mm/dd"], ["PRONOUNS", "placeholder"], ["MAJOR", "computer science"]]
+  }, {
+    title: "MAP",
+    type: "list",
+    items: [{ icon: "◎", name: "city, country", detail: "where i'm based" }]
+  }, {
+    title: "LANGUAGES",
+    type: "tags",
+    tags: ["language one", "language two"]
   }]
 }, {
-  id: "instagram",
-  label: "FUN FACT ABOUT ME",
-  handle: "@yourhandle",
-  href: "https://instagram.com/yourhandle",
-  icon: "📷",
-  barIcon: asset_icon2_png,
-  bars: 5,
-  newBars: [1, 2],
-  counts: ["3.4M", "2.5M", "676K", "412K", "198K"],
-  links: ["instagram.com/p/C4xQmRrNk2a", "instagram.com/p/C3wLpBsOj7f", "instagram.com/reel/C2vKoArMi6e", "instagram.com/p/C1uJnZqLh5d", "instagram.com/reel/C0tImYpKg4c"],
-  stats: [{
-    tag: "FOL",
-    value: "3.4K",
-    color: "#e1306c"
+  id: "music",
+  group: "INTERESTS",
+  label: "MUSIC",
+  role: "PARTY",
+  sections: [{
+    title: "FAVORITE ARTISTS",
+    type: "list",
+    items: [{ icon: "♪", name: "artist name", detail: "why i like them" }, { icon: "♪", name: "artist name", detail: "why i like them" }]
   }, {
-    tag: "PST",
-    value: "128",
-    color: "#f77737"
+    title: "FAVORITE SONGS",
+    type: "list",
+    items: [{ icon: "♫", name: "song title", detail: "artist / album" }, { icon: "♫", name: "song title", detail: "artist / album" }]
   }]
 }, {
-  id: "tiktok",
-  label: "WIRED FACT ABOUT ME",
-  handle: "@yourhandle",
-  href: "https://tiktok.com/@yourhandle",
-  icon: "🎵",
-  barIcon: asset_icon3_png,
-  bars: 7,
-  newBars: [0, 3, 5, 6],
-  counts: ["5.1M", "3.7M", "2.2M", "1.4M", "831K", "490K", "217K"],
-  links: ["tiktok.com/@yourhandle/video/7318492016374859054", "tiktok.com/@yourhandle/video/7305837261940183342", "tiktok.com/@yourhandle/video/7291046385720348974", "tiktok.com/@yourhandle/video/7278392047163820334", "tiktok.com/@yourhandle/video/7264819203847165742", "tiktok.com/@yourhandle/video/7251047382916430126", "tiktok.com/@yourhandle/video/7237294018463851822"],
-  stats: [{
-    tag: "FOL",
-    value: "8.9K",
-    color: "#00f2ea"
+  id: "shows",
+  label: "SHOWS / ANIME",
+  role: "PARTY",
+  sections: [{
+    title: "ANIME",
+    type: "list",
+    items: [{ icon: "★", name: "anime title", detail: "short thoughts" }, { icon: "★", name: "anime title", detail: "short thoughts" }]
   }, {
-    tag: "LKS",
-    value: "52K",
-    color: "#ff0050"
+    title: "SHOWS",
+    type: "list",
+    items: [{ icon: "▶", name: "show title", detail: "short thoughts" }]
+  }]
+}, {
+  id: "ocs",
+  label: "ORIGINAL CHARACTERS",
+  role: "PARTY",
+  sections: [{
+    title: "CHARACTERS",
+    type: "list",
+    items: [{ icon: "◆", name: "character one", detail: "short description", credit: "DRAWN BY ME", mine: true }, { icon: "◆", name: "character two", detail: "short description", credit: "ART BY @ARTIST" }, { icon: "◆", name: "character three", detail: "short description", credit: "COMMISSION: @ARTIST" }]
+  }]
+}, {
+  id: "games",
+  label: "GAMES",
+  role: "PARTY",
+  sections: [{
+    title: "ALL-TIME FAVORITES",
+    type: "list",
+    items: [{ icon: "▣", name: "game title", detail: "why it's a favorite" }, { icon: "▣", name: "game title", detail: "why it's a favorite" }]
+  }, {
+    title: "CURRENTLY PLAYING",
+    type: "list",
+    items: [{ icon: "▣", name: "game title", detail: "how far in" }]
   }]
 }];
+
+// The card that shows on the right side of the About page.
+function AboutDetail({ item, index, chip }) {
+  let n = 0; // counts rows so they pop in one after another
+  const delay = () => ({ animationDelay: `${120 + n++ * 55}ms` });
+  return <aside className="ad-panel">
+      <div className="ad-shell" key={item.id}>
+        <div className="ad-head">
+          <span className="ad-index">{String(index + 1).padStart(2, "0")}</span>
+          <span className="ad-title">{item.label}</span>
+          <span className="ad-chip">{chip}</span>
+        </div>
+        <div className="ad-body">
+          {item.sections.map(sec => <section className="ad-sec" key={sec.title}>
+              <div className="ad-sec-title"><i />{sec.title}<b /></div>
+              {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="ad-row" style={delay()} key={k}>
+                  <span className="ad-k">{k}</span>
+                  <span className="ad-v">{v}</span>
+                </div>)}
+              {sec.type === "text" && sec.paragraphs.map((t, k) => <p className="ad-text" style={delay()} key={k}>{t}</p>)}
+              {sec.type === "tags" && <div className="ad-tags">
+                  {sec.tags.map(t => <span className="ad-tag" style={delay()} key={t}>{t}</span>)}
+                </div>}
+              {sec.type === "list" && sec.items.map((it, k) => <div className="ad-item" style={delay()} key={k}>
+                  <div className="ad-icon-wrap">
+                    <div className="ad-icon">
+                      {typeof it.icon === "string" && it.icon.length > 3 ? <img src={it.icon} alt="" /> : it.icon}
+                    </div>
+                  </div>
+                  <div className="ad-item-text">
+                    <div className="ad-name">{it.name}</div>
+                    {it.detail && <div className="ad-detail">{it.detail}</div>}
+                  </div>
+                  {it.credit && <span className={`ad-credit${it.mine ? " mine" : ""}`}>{it.credit}</span>}
+                </div>)}
+            </section>)}
+        </div>
+      </div>
+    </aside>;
+}
+
 export function AboutMe() {
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -210,6 +244,8 @@ export function AboutMe() {
     setActive(index);
     if (isMobileViewport) {
       setRevealed(false);
+    } else {
+      setRevealed(true);
     }
   };
   useEffect(() => {
@@ -237,7 +273,8 @@ export function AboutMe() {
       }
       if (e.key === "Escape" || e.key === "Backspace") {
         playBack();
-        navigate(-1);
+        // inside a section: just close it. On the section list: go back to the menu.
+        if (revealed) setRevealed(false);else navigate(-1);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -245,27 +282,21 @@ export function AboutMe() {
   }, [active, navigate, revealed]);
   return <div id="menu-screen">
       <BgVideo src={asset_main1_mp4} />
-      {revealed && <div key={`dim-${active}`} className="sc-dim" />}
-      {revealed && <div key={`panel-${active}`} className={`sc-reveal-panel${mounted ? " mounted" : ""}`}>
-          <div className="sc-reveal-upper-bar">
-            {ABOUTME_REVEAL_CONTENT[active].upper.map(line => <div className="sc-reveal-upper-line" key={line}>{line}</div>)}
-          </div>
-          <div className="sc-reveal-lower-bar">{ABOUTME_REVEAL_CONTENT[active].lower}</div>
-        </div>}
-      {revealed && <div key={`nav-${active}`} className="sc-right-nav">
-          <span className="sc-nav-arrow left">◄</span>
-          <span className="sc-nav-btn">LB</span>
-          <span className="sc-nav-dot" />
-          <span className="sc-nav-btn">RB</span>
-          <span className="sc-nav-arrow right">►</span>
-        </div>}
-      {revealed && <div key={`portrait-${active}`} className={`sc-main-portrait-shell${mounted ? " mounted" : ""}`}>
-          <img className="sc-main-portrait" src={ABOUTME_MAIN_IMAGES[active]} alt="" />
-        </div>}
+      {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
       <style>{aboutStyles}</style>
 
       <div className="sc-root" role="navigation">
-        {ABOUTME_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
+        {ABOUTME_ITEMS.map((item, i) => <Fragment key={item.id}>
+            {item.group && <div className={`sc-divider${mounted ? " mounted" : ""}`} style={{
+          transitionDelay: `${i * 80}ms`
+        }}>
+                <span className="sc-divider-dot" />
+                <span className="sc-divider-label">{item.group}</span>
+                <span className="sc-divider-line" />
+              </div>}
+            <div className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} style={{
+          transitionDelay: `${i * 80}ms`
+        }} onClick={() => {
         handleBarClick(i);
       }} onMouseEnter={() => {
         if (active !== i) {
@@ -275,11 +306,11 @@ export function AboutMe() {
       }}>
             <div className="sc-bar-red" />
             <div className="sc-bar">
-              <img className="sc-char" src={ABOUTME_CHARS[i]} alt="" />
+              <img className="sc-char" src={ABOUTME_CHARS[i % ABOUTME_CHARS.length]} alt="" />
               <div className="sc-bar-fill" />
               <div className="sc-bar-shade" />
               <div className="sc-bar-content">
-                <div className="sc-role">{ABOUTME_ROLES[i].text}</div>
+                <div className="sc-role">{item.role}</div>
                 <div className="sc-main">
                   <div className="sc-main-top">
                     <div className="sc-label">{item.label}</div>
@@ -287,7 +318,8 @@ export function AboutMe() {
                 </div>
               </div>
             </div>
-          </div>)}
+          </div>
+          </Fragment>)}
       </div>
 
       <div className={`sc-footer${mounted ? " mounted" : ""}`}>
@@ -299,7 +331,7 @@ export function AboutMe() {
       <div className="sc-mobile-controls" aria-label="About mobile controls">
         <button className="sc-mobile-btn" type="button" onClick={() => {
           playBack();
-          navigate(-1);
+          if (revealed) setRevealed(false);else navigate(-1);
         }}>
           BACK
         </button>

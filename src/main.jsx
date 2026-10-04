@@ -119,6 +119,9 @@ function P3Menu({
           <span>persona</span>
         </div>
 
+        {/* big faded index of the hovered button: 01, 02, 03... */}
+        <div className="p3-index" key={active} aria-hidden="true">{String(active + 1).padStart(2, "0")}</div>
+
         <nav className="p3-menu">
           {P3MENU_ITEMS.map((item, i) => {
           const isActive = active === i;
@@ -332,6 +335,7 @@ const PAGETRANSITION_defaultBlocks = ["#0d1a3a", "#1a6aff", "#7dd4fc"];
 function DefaultTransition() {
   return PAGETRANSITION_defaultBlocks.map((color, i) => <motion.div key={i} style={{
     position: "fixed",
+    pointerEvents: "none",
     inset: 0,
     background: color,
     zIndex: 999 - i,
@@ -369,6 +373,7 @@ function AboutTransition() {
   }];
   return panels.map((panel, i) => <motion.div key={i} style={{
     position: "fixed",
+    pointerEvents: "none",
     top: panel.top,
     left: panel.left,
     width: panel.width,
@@ -410,6 +415,7 @@ function SocialsTransition() {
   }];
   return stripes.map((stripe, i) => <motion.div key={i} style={{
     position: "fixed",
+    pointerEvents: "none",
     top: "-6vh",
     left: stripe.left,
     width: stripe.width,
@@ -458,6 +464,7 @@ function ResumeTransition() {
   }];
   return cards.map((card, i) => <motion.div key={i} style={{
     position: "fixed",
+    pointerEvents: "none",
     left: "-6vw",
     top: card.top,
     width: "78vw",
@@ -483,11 +490,18 @@ function PageTransition({
   variant = "default"
 }) {
   const location = useLocation();
+  // The slide-in panels are removed from the page once their animation is done,
+  // so they can never sit on top of the buttons and swallow hover / click.
+  const [showOverlay, setShowOverlay] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShowOverlay(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
   return <AnimatePresence mode="wait">
       <motion.div key={location.pathname} style={{
       position: "relative"
     }}>
-        <TransitionOverlay variant={variant} />
+        {showOverlay && <div className="pt-overlay" aria-hidden="true"><TransitionOverlay variant={variant} /></div>}
         <motion.div initial={{
         opacity: 0
       }} animate={{
