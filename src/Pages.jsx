@@ -437,15 +437,18 @@ export function AboutMe() {
   const [mounted, setMounted] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const navigate = useNavigate();
-  const isMobileViewport = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+  // Checked at click time (not once at render), so browser zoom / Windows display scaling
+  // and window resizes can't leave this stuck on the wrong layout.
+  const isMobile = () => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
   const handleBarClick = index => {
     playEnter();
-    if (isMobileViewport && active === index) {
+    const mobile = isMobile();
+    if (mobile && active === index) {
       setRevealed(prev => !prev);
       return;
     }
     setActive(index);
-    if (isMobileViewport) {
+    if (mobile) {
       setRevealed(false);
     } else {
       setRevealed(true);
@@ -764,12 +767,160 @@ export function Socials() {
 }
 
 // ─────────────────────────────────────────────
-// Splash: blank entry page with a CONTINUE button (the click unlocks sound)
+// Splash: entry page with a "READ BEFORE YOU PROCEED" notice (left),
+// a divider, and the CONTINUE button + loading bar (right).
+// The click is what lets the browser play sound.
 // ─────────────────────────────────────────────
 
-// Blank entry page with one CONTINUE button.
-// The click is what lets the browser play sound, so the music deck
-// and the menu sounds can start right after it.
+// Edit the bullets here. One string = one bullet.
+// <mark className="sp-hl"> = the one emphasis style (cyan slab). Keep it to a few key phrases.
+const SPLASH_NOTICES = [
+  <>Coded on a <mark className="sp-hl">1920 x 1080</mark> screen, so resolutions might come off weird!</>,
+  <>Recommended to be viewed on a <mark className="sp-hl">PC</mark>, as I have not catered too much around mobile viewing.</>,
+  <>Music will <mark className="sp-hl">auto-play</mark> once you enter!</>,
+  <>If any error occurs, try doing a <mark className="sp-hl">hard refresh (CTRL + SHIFT + R)</mark>.</>,
+  <>This website will always be a work in progress. Coded with HTML, CSS and JavaScript (React).</>,
+  <>This is a personal biographical website made entirely by me, centered around <mark className="sp-hl">Persona 3: Reload's Menu UI</mark>. It may seem inaccurate, but I tried my best to replicate it!</>,
+  <>All assets belong to <a className="sp-link" href="https://atlus.com" target="_blank" rel="noopener noreferrer">ATLUS</a> and <a className="sp-link" href="https://en.wikipedia.org/wiki/P-Studio" target="_blank" rel="noopener noreferrer">P-Studio</a>.</>
+];
+
+// Styles for the notice layout. Injected with a <style> tag (same approach as about.css / socials.css),
+// so styles.css doesn't need to change. It loads after styles.css, so it overrides the old
+// CONTINUE-only placement of .sp-load.
+const splashStyles = `
+.sp-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3.5vw, 56px);
+  width: min(1240px, 92vw);
+}
+
+.sp-notice {
+  flex: 1 1 58%;
+  min-width: 0;
+  background: rgba(5, 9, 28, 0.94);
+  border-top: 6px solid #3ce2ff;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px rgba(60, 226, 255, 0.14);
+  padding-bottom: 20px;
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: opacity 0.45s ease 0.15s, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+.sp-root.mounted .sp-notice { opacity: 1; transform: translateX(0); }
+.sp-root.leaving .sp-notice { opacity: 0; transform: translateX(-60px); transition-delay: 0s; }
+
+.sp-notice-head {
+  background: #000;
+  margin-top: 8px;
+  padding: 10px 40px 10px 28px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%);
+}
+.sp-notice-head span {
+  display: block;
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(22px, 3vw, 38px);
+  letter-spacing: 2px;
+  line-height: 1.05;
+  color: #3ce2ff;
+}
+
+.sp-notice-list { list-style: none; padding: 18px 34px 0 28px; }
+.sp-notice-list li {
+  position: relative;
+  padding: 7px 0 7px 26px;
+  font-family: 'Montserrat', 'Barlow Condensed', sans-serif;
+  font-weight: 300;
+  font-size: clamp(13px, 1.25vw, 17px);
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: opacity 0.35s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sp-root.mounted .sp-notice-list li { opacity: 1; transform: translateX(0); }
+.sp-notice-list li i {
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  width: 9px;
+  height: 9px;
+  background: #c4001a;
+  transform: rotate(45deg);
+}
+
+/* emphasis inside the bullets */
+/* emphasis inside the bullets */
+.sp-notice-list .sp-hl {
+  background: #8df6ff;
+  color: #04122e;
+  font-weight: 700;
+  padding: 0 6px;
+  margin: 0 1px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+.sp-notice-list .sp-link {
+  color: #ff2a2a;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.15s ease;
+}
+.sp-notice-list .sp-link:hover { color: #fff; }
+
+.sp-notice-foot {
+  margin: 12px 34px 0 28px;
+  padding-top: 12px;
+  border-top: 2px solid rgba(60, 226, 255, 0.35);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(16px, 1.7vw, 22px);
+  letter-spacing: 3px;
+  color: #8df6ff;
+}
+.sp-notice-foot b { color: #fff; font-weight: 400; text-shadow: 3px 3px 0 #c4001a; }
+
+.sp-divider {
+  flex: 0 0 6px;
+  align-self: stretch;
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0), #fff 18%, #fff 82%, rgba(255,255,255,0));
+  transform: skewX(-12deg) scaleY(0);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+  box-shadow: 4px 0 0 #c4001a;
+}
+.sp-root.mounted .sp-divider { transform: skewX(-12deg) scaleY(1); }
+
+.sp-right {
+  flex: 1 1 36%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.sp-right .sp-btn { padding: 24px clamp(20px, 3vw, 48px); transform: translateX(40px); }
+.sp-root.mounted .sp-right .sp-btn { transform: translateX(0); }
+.sp-right .sp-label { font-size: clamp(36px, 5.2vw, 76px); }
+.sp-right .sp-label-bright { left: clamp(20px, 3vw, 48px); }
+.sp-right .sp-load {
+  position: static;
+  transform: none;
+  width: min(300px, 100%);
+}
+
+@media (max-width: 768px) {
+  .sp-root { overflow-y: auto; align-items: flex-start; }
+  .sp-wrap { flex-direction: column; width: 94vw; gap: 16px; padding: 18px 0 28px; }
+  .sp-notice { flex: none; width: 100%; }
+  .sp-divider { flex: 0 0 5px; align-self: center; width: 70%; height: 5px; transform: skewX(-12deg) scaleX(0); background: linear-gradient(90deg, rgba(255,255,255,0), #fff 18%, #fff 82%, rgba(255,255,255,0)); }
+  .sp-root.mounted .sp-divider { transform: skewX(-12deg) scaleX(1); }
+  .sp-right { flex: none; width: 100%; }
+}
+`;
+
 export function Splash({ onContinue, onStartAudio, playerReady }) {
   const [leaving, setLeaving] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -831,15 +982,30 @@ export function Splash({ onContinue, onStartAudio, playerReady }) {
   }, [ready]);
 
   return <div className={`sp-root${mounted ? " mounted" : ""}${leaving ? " leaving" : ""}`}>
-      <button className="sp-btn" type="button" onClick={go} disabled={!ready}>
-        <span className="sp-shadow" />
-        <span className="sp-highlight" />
-        <span className="sp-label sp-label-dark">CONTINUE</span>
-        <span className="sp-label sp-label-bright">CONTINUE</span>
-      </button>
-      <div className={`sp-load${ready ? " done" : ""}`} aria-hidden="true">
-        <div className="sp-load-track"><div className="sp-load-fill" style={{ width: `${progress}%` }} /></div>
-        <div className="sp-load-text">{ready ? "READY" : `LOADING ${progress}%`}</div>
+      <style>{splashStyles}</style>
+      <div className="sp-wrap">
+        <section className="sp-notice" aria-label="Read before you proceed">
+          <div className="sp-notice-head"><span>WELCOME! READ BEFORE YOU PROCEED</span></div>
+          <ul className="sp-notice-list">
+            {SPLASH_NOTICES.map((t, i) => <li key={i} style={{ transitionDelay: `${0.35 + i * 0.09}s` }}><i />{t}</li>)}
+          </ul>
+          <p className="sp-notice-foot">If you're okay with these, you may "<b>CONTINUE</b>"</p>
+        </section>
+
+        <div className="sp-divider" aria-hidden="true" />
+
+        <div className="sp-right">
+          <button className="sp-btn" type="button" onClick={go} disabled={!ready}>
+            <span className="sp-shadow" />
+            <span className="sp-highlight" />
+            <span className="sp-label sp-label-dark">CONTINUE</span>
+            <span className="sp-label sp-label-bright">CONTINUE</span>
+          </button>
+          <div className={`sp-load${ready ? " done" : ""}`} aria-hidden="true">
+            <div className="sp-load-track"><div className="sp-load-fill" style={{ width: `${progress}%` }} /></div>
+            <div className="sp-load-text">{ready ? "READY" : `LOADING ${progress}%`}</div>
+          </div>
+        </div>
       </div>
       <div className="sp-hint"><span className="sp-hint-key">↵</span><span>CONTINUE</span></div>
     </div>;
