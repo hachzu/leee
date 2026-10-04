@@ -770,14 +770,13 @@ export function Socials() {
 // Blank entry page with one CONTINUE button.
 // The click is what lets the browser play sound, so the music deck
 // and the menu sounds can start right after it.
-export function Splash({ onContinue }) {
+export function Splash({ onContinue, onStartAudio, playerReady }) {
   const [leaving, setLeaving] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [ready, setReady] = useState(false);
-  const [waiting, setWaiting] = useState(false);
-  const readyRef = useRef(false);
+  const [assetsReady, setAssetsReady] = useState(false);
   const startedRef = useRef(false);
+  const ready = assetsReady && playerReady;
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 300);
@@ -789,8 +788,7 @@ export function Splash({ onContinue }) {
     let alive = true;
     const finish = () => {
       if (!alive) return;
-      readyRef.current = true;
-      setReady(true);
+      setAssetsReady(true);
     };
     const cap = setTimeout(finish, PRELOAD_TIMEOUT_MS); // never make anyone wait forever
     preloadEssentials(p => {
@@ -815,18 +813,11 @@ export function Splash({ onContinue }) {
   };
 
   const go = () => {
-    if (startedRef.current) return;
+    if (startedRef.current || !ready) return;
     const unlocked = resumeAudio(); // this click is what lets the browser play sound
-    if (!readyRef.current) {
-      setWaiting(true); // still loading: continue automatically as soon as it is done
-      return;
-    }
+    if (onStartAudio) onStartAudio();
     unlocked.then(proceed);
   };
-
-  useEffect(() => {
-    if (ready && waiting) resumeAudio().then(proceed);
-  }, [ready, waiting]);
 
   useEffect(() => {
     const onKey = e => {
@@ -837,16 +828,16 @@ export function Splash({ onContinue }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [ready]);
 
   return <div className={`sp-root${mounted ? " mounted" : ""}${leaving ? " leaving" : ""}`}>
-      <button className="sp-btn" type="button" onClick={go}>
+      <button className="sp-btn" type="button" onClick={go} disabled={!ready}>
         <span className="sp-shadow" />
         <span className="sp-highlight" />
         <span className="sp-label sp-label-dark">CONTINUE</span>
         <span className="sp-label sp-label-bright">CONTINUE</span>
       </button>
-      <div className={`sp-load${ready ? " done" : ""}${waiting && !ready ? " waiting" : ""}`} aria-hidden="true">
+      <div className={`sp-load${ready ? " done" : ""}`} aria-hidden="true">
         <div className="sp-load-track"><div className="sp-load-fill" style={{ width: `${progress}%` }} /></div>
         <div className="sp-load-text">{ready ? "READY" : `LOADING ${progress}%`}</div>
       </div>
@@ -895,7 +886,7 @@ const fmt = s => {
   return `${m}:${String(sec).padStart(2, "0")}`;
 };
 
-export function WebDeck() {
+export function WebDeck({ onPlayerReady }) {
   const [open, setOpen] = useState(false);
   const [below, setBelow] = useState(false); // panel opens under the bar when deck is near the top
   const [playing, setPlaying] = useState(false);
@@ -911,7 +902,6 @@ export function WebDeck() {
   const playerRef = useRef(null);
   const idxRef = useRef(0);
   const drag = useRef(null);
-  const unlockRef = useRef(null);
   const shuffleRef = useRef(false);
   const historyRef = useRef([]);
   const [shuffle, setShuffle] = useState(false);
@@ -951,25 +941,9 @@ export function WebDeck() {
             if (t) setTitle(t);
 
             e.target.setVolume(volRef.current);
-
-            // Autoplay on start. Browsers often block sound until the visitor
-            // clicks or presses a key once, so if it didn't start, the first
-            // click / key press anywhere on the page starts it instead.
-            e.target.playVideo();
-            setTimeout(() => {
-              const st = playerRef.current && playerRef.current.getPlayerState();
-              if (st === 1 || st === 3) return; // playing or buffering
-              const unlock = ev => {
-                if (ev.target && ev.target.closest && ev.target.closest(".wd")) return;
-                window.removeEventListener("pointerdown", unlock);
-                window.removeEventListener("keydown", unlock);
-                if (playerRef.current) playerRef.current.playVideo();
-              };
-              window.addEventListener("pointerdown", unlock);
-              window.addEventListener("keydown", unlock);
-              unlockRef.current = unlock;
-            }, 1500);
+            if (onPlayerReady) onPlayerReady(e.target);
           },
+          onAutoplayBlocked: () => setPlaying(false),
           onStateChange: e => {
             if (e.data === 1) setPlaying(true);
             if (e.data === 2) setPlaying(false);
@@ -985,10 +959,6 @@ export function WebDeck() {
     });
     return () => {
       cancelled = true;
-      if (unlockRef.current) {
-        window.removeEventListener("pointerdown", unlockRef.current);
-        window.removeEventListener("keydown", unlockRef.current);
-      }
       try {
         player && player.destroy();
       } catch (err) {}

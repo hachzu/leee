@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import asset_Mainn_mp4 from "./assets/Mainn.mp4";
@@ -557,14 +557,31 @@ function AnimatedRoutes() {
 }
 function App() {
   const [entered, setEntered] = useState(false);
+  const [deckReady, setDeckReady] = useState(false);
+  const [deckTimedOut, setDeckTimedOut] = useState(false);
+  const deckPlayerRef = useRef(null);
+  const startRequestedRef = useRef(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setDeckTimedOut(true), 10000);
+    return () => clearTimeout(timer);
+  }, []);
   useEffect(() => {
     if (entered) warmVideos();
   }, [entered]);
-  // The CONTINUE click lets the browser play sound, so the deck and menu sounds can start after it.
-  if (!entered) return <Splash onContinue={() => setEntered(true)} />;
+  const startWebDeck = () => {
+    startRequestedRef.current = true;
+    if (deckPlayerRef.current) deckPlayerRef.current.playVideo();
+  };
+  const onWebDeckReady = player => {
+    deckPlayerRef.current = player;
+    setDeckReady(true);
+    if (startRequestedRef.current) player.playVideo();
+  };
   return <>
-      <AnimatedRoutes />
-      <WebDeck />
+      <div style={entered ? undefined : { visibility: "hidden", pointerEvents: "none" }}>
+        <WebDeck onPlayerReady={onWebDeckReady} />
+      </div>
+      {entered ? <AnimatedRoutes /> : <Splash playerReady={deckReady || deckTimedOut} onStartAudio={startWebDeck} onContinue={() => setEntered(true)} />}
     </>;
 }
 
