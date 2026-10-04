@@ -4,11 +4,7 @@ import asset_char1_png from "./assets/char1.png";
 import asset_char2_png from "./assets/char2.png";
 import asset_char3_png from "./assets/char3.png";
 import asset_main1_mp4 from "./assets/main1.mp4";
-import asset_icon1_png from "./assets/icon1.png";
-import asset_icon2_png from "./assets/icon2.png";
-import asset_icon3_png from "./assets/icon3.png";
 import asset_main3_mp4 from "./assets/main3.mp4";
-import asset_newsign_png from "./assets/newsign.png";
 import aboutStyles from './about.css?inline';
 import socialStyles from './socials.css?inline';
 import BgVideo from './BgVideo.jsx';
@@ -17,6 +13,7 @@ import asset_enter_ui_wav from "./assets/enter_ui.wav";
 import asset_navigation_ui_wav from "./assets/navigation_ui.wav";
 import asset_back_ui_wav from "./assets/back_ui.wav";
 import asset_deck_ui_wav from "./assets/deck_ui.wav";
+import asset_launch_ui_wav from "./assets/launch_ui.wav";
 
 // ─────────────────────────────────────────────
 // UI sounds
@@ -40,7 +37,8 @@ const SFX = {
   enter: { audio: makeSfx(asset_enter_ui_wav), volume: 0.6 },
   nav: { audio: makeSfx(asset_navigation_ui_wav), volume: 0.5 }, // volume: 0 = silent, 1 = full
   back: { audio: makeSfx(asset_back_ui_wav), volume: 0.6 },
-  deck: { audio: makeSfx(asset_deck_ui_wav), volume: 0.5 }
+  deck: { audio: makeSfx(asset_deck_ui_wav), volume: 0.5 },
+  launch: { audio: makeSfx(asset_launch_ui_wav), volume: 0.6 } // opening a social link
 };
 function playSfx(name) {
   try {
@@ -65,6 +63,9 @@ export const playBack = () => {
 };
 export const playDeck = () => {
   playSfx("deck");
+};
+export const playLaunch = () => {
+  playSfx("launch");
 };
 
 // open_ui: plays when the menu screen shows. If the browser blocks it (no click
@@ -284,6 +285,7 @@ export function AboutMe() {
       <BgVideo src={asset_main1_mp4} />
       {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
       <style>{aboutStyles}</style>
+      <div className={`pg-title${mounted ? " mounted" : ""}`}>ABOUT ME</div>
 
       <div className="sc-root" role="navigation">
         {ABOUTME_ITEMS.map((item, i) => <Fragment key={item.id}>
@@ -344,242 +346,217 @@ export function AboutMe() {
       </div>
     </div>;
 }
-// Social profiles
-const SOCIALS_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
-const SOCIALS_ROLES = [{
-  text: "LEADER",
-  color: "#e8c100",
-  bg: "rgba(232,193,0,0.12)",
-  border: "rgba(232,193,0,0.5)"
-}, {
-  text: "PARTY",
-  color: "#4a8fff",
-  bg: "rgba(74,143,255,0.12)",
-  border: "rgba(74,143,255,0.5)"
-}, {
-  text: "PARTY",
-  color: "#4a8fff",
-  bg: "rgba(74,143,255,0.12)",
-  border: "rgba(74,143,255,0.5)"
-}];
-const SOCIALS_ITEMS = [{
-  id: "twitch",
-  label: "TWITCH",
-  handle: "@yourname",
-  href: "https://twitch.tv/yourname",
-  icon: "🎮",
-  barIcon: asset_icon1_png,
-  bars: 1,
-  newBars: [0],
-  counts: ["56"],
-  links: ["twitch.tv/videos/2041837265"],
-  stats: [{
-    tag: "FOL",
-    value: "1.2K",
-    color: "#9147ff"
-  }, {
-    tag: "VWR",
-    value: "042",
-    color: "#bf94ff"
-  }]
-}, {
-  id: "instagram",
-  label: "INSTAGRAM",
-  handle: "@yourhandle",
-  href: "https://instagram.com/yourhandle",
-  icon: "📷",
-  barIcon: asset_icon2_png,
-  bars: 5,
-  newBars: [1, 2],
-  counts: ["3.4M", "2.5M", "676K", "412K", "198K"],
-  links: ["instagram.com/p/C4xQmRrNk2a", "instagram.com/p/C3wLpBsOj7f", "instagram.com/reel/C2vKoArMi6e", "instagram.com/p/C1uJnZqLh5d", "instagram.com/reel/C0tImYpKg4c"],
-  stats: [{
-    tag: "FOL",
-    value: "3.4K",
-    color: "#e1306c"
-  }, {
-    tag: "PST",
-    value: "128",
-    color: "#f77737"
-  }]
-}, {
-  id: "tiktok",
-  label: "TIKTOK",
-  handle: "@yourhandle",
-  href: "https://tiktok.com/@yourhandle",
-  icon: "🎵",
-  barIcon: asset_icon3_png,
-  bars: 7,
-  newBars: [0, 3, 5, 6],
-  counts: ["5.1M", "3.7M", "2.2M", "1.4M", "831K", "490K", "217K"],
-  links: ["tiktok.com/@yourhandle/video/7318492016374859054", "tiktok.com/@yourhandle/video/7305837261940183342", "tiktok.com/@yourhandle/video/7291046385720348974", "tiktok.com/@yourhandle/video/7278392047163820334", "tiktok.com/@yourhandle/video/7264819203847165742", "tiktok.com/@yourhandle/video/7251047382916430126", "tiktok.com/@yourhandle/video/7237294018463851822"],
-  stats: [{
-    tag: "FOL",
-    value: "8.9K",
-    color: "#00f2ea"
-  }, {
-    tag: "LKS",
-    value: "52K",
-    color: "#ff0050"
-  }]
-}];
+// ─────────────────────────────────────────────
+// Socials: a horizontal conveyor of icons.
+//   The icon in the middle is highlighted and zoomed, the ones next to it fade out.
+//   ←/→ (or A/D, LB/RB, the dots, mouse wheel, swipe) slide the conveyor.
+//   Click the middle icon (or press Enter) to open it. A ghost copy pops out of it.
+//
+// To edit: change label / handle / href in SOCIALS_ITEMS.
+// The icons below are simple drawn versions. To use a real logo file instead,
+// import it at the top of this file and add  image: yourImport  to the item.
+// ─────────────────────────────────────────────
+const IconDiscord = () => <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M19.6 5.3A17.5 17.5 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a17.5 17.5 0 0 0-4.3 1.3C1.7 9.3 1 13.2 1.3 17a17.7 17.7 0 0 0 5.3 2.7l1.1-1.8c-.6-.2-1.2-.5-1.7-.9l.4-.3a12.6 12.6 0 0 0 11.2 0l.4.3c-.5.4-1.1.7-1.7.9l1.1 1.8a17.7 17.7 0 0 0 5.3-2.7c.4-4.4-.7-8.3-3.1-11.7z M8.6 10.3c-1 0-1.8.9-1.8 2.1s.8 2.1 1.8 2.1 1.8-.9 1.8-2.1-.8-2.1-1.8-2.1z M15.4 10.3c-1 0-1.8.9-1.8 2.1s.8 2.1 1.8 2.1 1.8-.9 1.8-2.1-.8-2.1-1.8-2.1z" /></svg>;
+const IconInstagram = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" /></svg>;
+const IconKofi = () => <svg viewBox="0 0 24 24"><path fill="currentColor" fillRule="evenodd" d="M3 7.5h14.5v6.2a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5z M10.2 15.6s-3-1.8-3-3.8a1.7 1.7 0 0 1 3-1.1 1.7 1.7 0 0 1 3 1.1c0 2-3 3.8-3 3.8z" /><path d="M17.5 9h1.2a2.7 2.7 0 0 1 0 5.4h-1.2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
+const IconRoblox = () => <svg viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M7.05 3.43L20.57 7.05L16.95 20.57L3.43 16.95Z M10.59 9.55L14.45 10.59L13.41 14.45L9.55 13.41Z" /></svg>;
+const IconSpotify = () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="currentColor" /><g fill="none" strokeLinecap="round" style={{ stroke: "var(--cut)" }}><path d="M6.3 9.4c3.8-1.1 8.2-.7 11.6 1.3" strokeWidth="1.9" /><path d="M7 12.7c3.2-.9 6.7-.5 9.5 1.2" strokeWidth="1.6" /><path d="M7.7 15.7c2.6-.7 5.2-.4 7.4 1" strokeWidth="1.3" /></g></svg>;
+const IconGithub = () => <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg>;
+const IconSteam = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><circle cx="15.2" cy="9.6" r="3.2" /><circle cx="8.6" cy="15.4" r="2.2" fill="currentColor" /><path d="M10.2 14.1l3.2-2.4" /></svg>;
+
+const SOCIALS_ITEMS = [
+  { id: "discord", label: "DISCORD", handle: "@yourname", href: "https://discord.com/users/yourid", Icon: IconDiscord },
+  { id: "instagram", label: "INSTAGRAM", handle: "@yourhandle", href: "https://instagram.com/yourhandle", Icon: IconInstagram },
+  { id: "kofi", label: "KO-FI", handle: "ko-fi.com/yourname", href: "https://ko-fi.com/yourname", Icon: IconKofi },
+  { id: "roblox", label: "ROBLOX", handle: "@yourname", href: "https://www.roblox.com/users/yourid/profile", Icon: IconRoblox },
+  { id: "spotify", label: "SPOTIFY", handle: "your profile", href: "https://open.spotify.com/user/yourid", Icon: IconSpotify },
+  { id: "github", label: "GITHUB", handle: "@yourname", href: "https://github.com/yourname", Icon: IconGithub },
+  { id: "steam", label: "STEAM", handle: "@yourname", href: "https://steamcommunity.com/id/yourname", Icon: IconSteam }
+];
+
+// how far each slot is from the middle, how big it is, and how visible
+const SO_X = [0, 1.45, 2.45, 3.3];     // distance from the middle, in icon widths
+const SO_SCALE = [1.3, 0.85, 0.65, 0.5];
+const SO_OPACITY = [1, 0.5, 0.2, 0];
+const SO_SLOPE = Math.tan(4 * Math.PI / 180); // must match the band's skewY(-4deg) in socials.css, so the icons ride along the slant
+const OPEN_DELAY = 2000; // ms between the click and the link opening, so the ghost animation can play
+
+function SocialIcon({ item }) {
+  return item.image ? <img src={item.image} alt="" /> : <item.Icon />;
+}
+
 export function Socials() {
+  const N = SOCIALS_ITEMS.length;
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [activeInfoBar, setActiveInfoBar] = useState(0);
-  const [focus, setFocus] = useState("left"); // "left" | "right"
+  const [ghosts, setGhosts] = useState([]);
+  const [pressed, setPressed] = useState(false);
+  const activeRef = useRef(0);
+  const ghostId = useRef(0);
+  const wheelAt = useRef(0);
+  const swipe = useRef(null);
+  const swiped = useRef(false);
   const navigate = useNavigate();
-  const isMobileViewport = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(t);
   }, []);
+
+  const openTimer = useRef(null);
+  const [opening, setOpening] = useState(false);
+  const cancelOpen = () => {
+    clearTimeout(openTimer.current);
+    openTimer.current = null;
+    setOpening(false);
+  };
+  useEffect(() => () => clearTimeout(openTimer.current), []);
+
+  const go = i => {
+    cancelOpen(); // moving to another icon cancels a pending open
+    activeRef.current = i;
+    setActive(i);
+    setGhosts([]);
+  };
+  const move = dir => {
+    playNav();
+    go((activeRef.current + dir + N) % N);
+  };
+  // click / Enter on the middle icon: ghost pop now, the link opens after OPEN_DELAY
+  const activate = () => {
+    const item = SOCIALS_ITEMS[activeRef.current];
+    playLaunch();
+    const id = ++ghostId.current;
+    setGhosts(g => [...g.slice(-3), id]);
+    setPressed(true);
+    setTimeout(() => setPressed(false), 160);
+    if (openTimer.current) return; // already counting down, extra clicks only pop
+    setOpening(true);
+    openTimer.current = setTimeout(() => {
+      openTimer.current = null;
+      setOpening(false);
+      const w = window.open(item.href, "_blank");
+      if (w) {
+        try { w.opener = null; } catch (err) {}
+      } else {
+        window.location.assign(item.href); // the browser blocked the new tab, so open it here instead
+      }
+    }, OPEN_DELAY);
+  };
+  const back = () => {
+    cancelOpen();
+    playBack();
+    navigate(-1);
+  };
+
   useEffect(() => {
     const onKey = e => {
-      if (focus === "left") {
-        if (e.key === "ArrowUp" && active > 0) {
-          playNav();
-          setActive(active - 1);
-        }
-        if (e.key === "ArrowDown" && active < SOCIALS_ITEMS.length - 1) {
-          playNav();
-          setActive(active + 1);
-        }
-        if (e.key === "ArrowRight") {
-          setFocus("right");
-          setActiveInfoBar(0);
-        }
-        if (e.key === "Enter") {
-          playEnter();
-          window.open(SOCIALS_ITEMS[active].href, "_blank");
-        }
-      } else {
-        const barCount = SOCIALS_ITEMS[active].bars;
-        if (e.key === "ArrowUp" && activeInfoBar > 0) {
-          playDeck();
-          setActiveInfoBar(activeInfoBar - 1);
-        }
-        if (e.key === "ArrowDown" && activeInfoBar < barCount - 1) {
-          playDeck();
-          setActiveInfoBar(activeInfoBar + 1);
-        }
-        if (e.key === "ArrowLeft") {
-          playBack();
-          setFocus("left");
-        }
-        if (e.key === "Enter") {
-          playEnter();
-          window.open("https://" + SOCIALS_ITEMS[active].links[activeInfoBar], "_blank");
-        }
-      }
-      if (e.key === "ArrowLeft" && focus === "left" || e.key === "Escape" || e.key === "Backspace") {
-        playBack();
-        navigate(-1);
-      }
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") move(-1);
+      else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") move(1);
+      else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault(); // stops a focused button from also firing its own click
+        if (!e.repeat) activate();
+      } else if (e.key === "Escape" || e.key === "Backspace") back();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [active, activeInfoBar, navigate, focus]);
+  }, [navigate]);
+
+  const onWheel = e => {
+    const now = Date.now();
+    if (now - wheelAt.current < 260) return;
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(d) < 8) return;
+    wheelAt.current = now;
+    move(d > 0 ? 1 : -1);
+  };
+  const onPointerDown = e => {
+    swipe.current = e.clientX;
+    swiped.current = false;
+  };
+  const onPointerUp = e => {
+    if (swipe.current === null) return;
+    const dx = e.clientX - swipe.current;
+    swipe.current = null;
+    if (Math.abs(dx) > 50) {
+      swiped.current = true;
+      move(dx < 0 ? 1 : -1);
+    }
+  };
+
+  const cur = SOCIALS_ITEMS[active];
+
   return <div id="menu-screen">
       <BgVideo src={asset_main3_mp4} />
       <style>{socialStyles}</style>
 
-      <div className="sc-root" role="navigation">
-        {SOCIALS_ITEMS.map((item, i) => <div key={item.id} className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} onClick={() => {
-        playEnter();
-        if (active === i) window.open(item.href, "_blank");else setActive(i);
-      }} onMouseEnter={() => {
-        if (active !== i) playNav();
-        setActive(i);
-      }}>
-            <div className="sc-bar-red" />
-            <div className="sc-bar">
-              <img className="sc-char" src={SOCIALS_CHARS[i]} alt="" />
-              <div className="sc-bar-fill" />
-              <div className="sc-bar-shade" />
-              <div className="sc-bar-content">
-                <div className="sc-role">{SOCIALS_ROLES[i].text}</div>
-                <div className="sc-main">
-                  <div className="sc-main-top">
-                    <div className="sc-icon">{item.icon}</div>
-                    <div className="sc-label">{item.label}</div>
-                  </div>
+      <div className="so-page">
+        <div className="so-shade" />
+        <div className={`so-band${mounted ? " mounted" : ""}`} />
+
+        <div className={`so-title${mounted ? " mounted" : ""}`}>SOCIALS</div>
+
+        <div className={`so-nav${mounted ? " mounted" : ""}`}>
+          <span className="so-lb" onClick={() => move(-1)}>◄ LB</span>
+          <div className="so-dots">
+            {SOCIALS_ITEMS.map((it, i) => <span key={it.id} className={`so-dot${i === active ? " on" : ""}`} onClick={() => { if (i !== active) { playNav(); go(i); } }} />)}
+          </div>
+          <span className="so-rb" onClick={() => move(1)}>RB ►</span>
+        </div>
+
+        <div className={`so-stage${mounted ? " mounted" : ""}`} onWheel={onWheel} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { swipe.current = null; }}>
+          {SOCIALS_ITEMS.map((item, i) => {
+            let off = ((i - active) % N + N) % N;
+            if (off > N / 2) off -= N;
+            const d = Math.min(Math.abs(off), 3);
+            const sign = off < 0 ? -1 : 1;
+            const isMid = off === 0;
+            return <div key={item.id} role="button" aria-label={item.label} className={`so-item${isMid ? " active" : ""}${isMid && pressed ? " pressed" : ""}`} style={{
+              transform: `translate(-50%, -50%) translateX(calc(var(--sz) * ${sign * SO_X[d]})) translateY(calc(var(--sz) * ${(-sign * SO_X[d] * SO_SLOPE).toFixed(4)})) scale(${SO_SCALE[d]})`,
+              opacity: SO_OPACITY[d],
+              zIndex: 10 - d,
+              pointerEvents: Math.abs(off) > 2 ? "none" : "auto"
+            }} onClick={() => {
+              if (swiped.current) return;
+              if (isMid) activate();
+              else { playNav(); go(i); }
+            }}>
+                <div className="so-card">
+                  <div className="so-icon"><SocialIcon item={item} /></div>
                 </div>
-                <div className="sc-stats">
-                  {item.stats.map(s => <div className="sc-stat" key={s.tag}>
-                      <div className="sc-stat-top">
-                        <span className="sc-stat-tag" style={{
-                    color: s.color,
-                    borderColor: s.color
-                  }}>{s.tag}</span>
-                        <span className="sc-stat-num">{s.value}</span>
-                      </div>
-                      <div className="sc-stat-bars">
-                        <div className="sc-stat-bar-color" style={{
-                    background: s.color
-                  }} />
-                        <div className="sc-stat-bar-black" />
-                      </div>
-                    </div>)}
-                </div>
-              </div>
-            </div>
-          </div>)}
+                {isMid && ghosts.map(g => <span className="so-ghost" key={g}>
+                    <span className="so-ghost-ring" />
+                    <span className="so-ghost-card" onAnimationEnd={e => {
+                      if (e.animationName === "so-ghost-pop") setGhosts(x => x.filter(y => y !== g));
+                    }}>
+                      <span className="so-icon"><SocialIcon item={item} /></span>
+                    </span>
+                  </span>)}
+              </div>;
+          })}
+        </div>
+
+        <div className={`so-info${mounted ? " mounted" : ""}`} key={active}>
+          <div className="so-info-name"><span>{cur.label}</span></div>
+          <div className="so-info-row">
+            <span className="so-info-handle">{cur.handle}</span>
+            <span className={`so-info-open${opening ? " going" : ""}`} onClick={activate}>
+              {opening ? "OPENING..." : "↵ OPEN"}
+              {opening && <span className="so-load" style={{ animationDuration: `${OPEN_DELAY}ms` }} />}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {mounted && <div className="sc-right-nav" key={active}>
-          <span className="sc-nav-arrow left">◄</span>
-          <span className="sc-nav-btn">LB</span>
-          <span className="sc-nav-label">{SOCIALS_ITEMS[active].label}</span>
-          <span className="sc-nav-btn">RB</span>
-          <span className="sc-nav-arrow right">►</span>
-        </div>}
-
-      {mounted && <div className="sc-info-panel" key={`panel-${active}`}>
-          {Array.from({
-        length: SOCIALS_ITEMS[active].bars
-      }).map((_, i) => <div className={`sc-info-bar-wrap${activeInfoBar === i ? " selected" : ""}`} key={`bar-${active}-${i}`} style={{
-        animationDelay: `${i * 50}ms`
-      }} onClick={() => {
-        playEnter();
-        if (isMobileViewport || activeInfoBar === i) {
-          window.open("https://" + SOCIALS_ITEMS[active].links[i], "_blank");
-          return;
-        }
-        setActiveInfoBar(i);
-      }} onMouseEnter={() => {
-        if (activeInfoBar !== i) playDeck();
-        setActiveInfoBar(i);
-      }}>
-              {SOCIALS_ITEMS[active].newBars.includes(i) && <img className="sc-info-bar-new" src={asset_newsign_png} alt="" />}
-              <div className="sc-info-bar">
-                <img className="sc-info-bar-icon" src={SOCIALS_ITEMS[active].barIcon} alt="" />
-                <span className="sc-info-bar-text">{SOCIALS_ITEMS[active].links[i].slice(0, 10)}...</span>
-                <span className="sc-info-bar-box">VIEWS</span>
-                <span className="sc-info-bar-count">{SOCIALS_ITEMS[active].counts[i]}</span>
-              </div>
-            </div>)}
-        </div>}
-
       <div className={`sc-footer${mounted ? " mounted" : ""}`}>
-        <div className="sc-footer-row"><span className="sc-footer-key">↑↓</span><span>SELECT</span></div>
+        <div className="sc-footer-row"><span className="sc-footer-key">←→</span><span>SELECT</span></div>
         <div className="sc-footer-row"><span className="sc-footer-key">↵</span><span>OPEN</span></div>
         <div className="sc-footer-row"><span className="sc-footer-key">ESC</span><span>BACK</span></div>
       </div>
 
       <div className="sc-mobile-controls" aria-label="Socials mobile controls">
-        <button className="sc-mobile-btn" type="button" onClick={() => {
-          playBack();
-          navigate(-1);
-        }}>
-          BACK
-        </button>
-        <button className="sc-mobile-btn" type="button" onClick={() => {
-          playEnter();
-          window.open(SOCIALS_ITEMS[active].href, "_blank");
-        }}>
-          OPEN
-        </button>
+        <button className="sc-mobile-btn" type="button" onClick={back}>BACK</button>
+        <button className="sc-mobile-btn" type="button" onClick={activate}>OPEN</button>
       </div>
     </div>;
 }

@@ -955,3 +955,11 @@
 @media (max-width: 1024px) {
   .ad-text { font-size: 14px; padding: 10px 16px 10px 12px; }
 }
+
+/* small screens: the list starts at the top, so push it below the page title */
+@media (max-width: 1024px) {
+  #menu-screen .sc-root { padding-top: 112px !important; }
+}
+@media (max-width: 768px) {
+  #menu-screen .sc-root { padding-top: 76px !important; }
+}

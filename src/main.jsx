@@ -227,7 +227,8 @@ const RESUMEPAGE_EDUCATION_ROWS = [{
   status: "Pending"
 }];
 function ResumePage({
-  src
+  src,
+  title = "LIST"
 }) {
   const navigate = useNavigate();
   const [active, setActive] = useState(1);
@@ -262,7 +263,7 @@ function ResumePage({
 
       <div className="resume-overlay">
         <div className="resume-stack">
-          <div className={`resume-list-tag${mounted ? " mounted" : ""}`}>LIST</div>
+          <div className={`resume-list-tag${mounted ? " mounted" : ""}`}>{title}</div>
           {RESUMEPAGE_ITEMS.map((item, index) => <div key={item.id} className={`resume-card-wrap${active === index ? " active" : ""}${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${index * 55}ms`
         }} onMouseEnter={() => {
@@ -397,41 +398,38 @@ function AboutTransition() {
   }} />);
 }
 function SocialsTransition() {
-  const stripes = [{
+  // Three bands sweep right to left across the middle of the screen, the same line the
+  // icon conveyor sits on, so the page appears to be carried in by the wipe.
+  const bands = [{
     color: "#00184c",
-    left: "72vw",
-    width: "24vw",
+    top: "29vh",
     delay: 0
   }, {
     color: "#00dff7",
-    left: "80vw",
-    width: "14vw",
+    top: "39.5vh",
     delay: 0.06
   }, {
     color: "#ffffff",
-    left: "88vw",
-    width: "8vw",
+    top: "50vh",
     delay: 0.12
   }];
-  return stripes.map((stripe, i) => <motion.div key={i} style={{
+  return bands.map((band, i) => <motion.div key={i} style={{
     position: "fixed",
     pointerEvents: "none",
-    top: "-6vh",
-    left: stripe.left,
-    width: stripe.width,
-    height: "112vh",
-    background: stripe.color,
+    top: band.top,
+    left: "-20vw",
+    width: "140vw",
+    height: "11vh",
+    background: band.color,
     zIndex: 999 - i,
-    transform: "skewX(-16deg)",
-    transformOrigin: "top"
+    skewX: -16
   }} initial={{
-    y: -1200,
-    opacity: 1
+    x: "110vw"
   }} animate={{
-    y: [-1200, 0, 0, 1200]
+    x: ["110vw", "0vw", "0vw", "-130vw"]
   }} transition={{
-    duration: 0.56,
-    delay: stripe.delay,
+    duration: 0.62,
+    delay: band.delay,
     times: [0, 0.42, 0.58, 1],
     ease: [0.76, 0, 0.24, 1]
   }} />);
@@ -544,12 +542,12 @@ function AnimatedRoutes() {
 
         {/* New menu pages. Both reuse the Resume template as a placeholder.
             Replace ResumePage with your own SkillsPage / BlogsPage later. */}
-        <Route path="/skills" element={<PageTransition><ResumePage src={asset_main2_mp4} /></PageTransition>} />
-        <Route path="/blogs" element={<PageTransition><ResumePage src={asset_main1_mp4} /></PageTransition>} />
+        <Route path="/skills" element={<PageTransition><ResumePage src={asset_main2_mp4} title="SKILLS" /></PageTransition>} />
+        <Route path="/blogs" element={<PageTransition><ResumePage src={asset_main1_mp4} title="BLOGS" /></PageTransition>} />
 
         {/* Original Resume page, kept as a template. Not linked from the menu,
             but still reachable at /#/resume */}
-        <Route path="/resume" element={<PageTransition><ResumePage src={asset_main2_mp4} /></PageTransition>} />
+        <Route path="/resume" element={<PageTransition><ResumePage src={asset_main2_mp4} title="RESUME" /></PageTransition>} />
       </Routes>
     </AnimatePresence>;
 }
