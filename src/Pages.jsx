@@ -576,13 +576,13 @@ const IconGithub = () => <svg viewBox="0 0 16 16" fill="currentColor"><path d="M
 const IconSteam = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><circle cx="15.2" cy="9.6" r="3.2" /><circle cx="8.6" cy="15.4" r="2.2" fill="currentColor" /><path d="M10.2 14.1l3.2-2.4" /></svg>;
 
 const SOCIALS_ITEMS = [
-  { id: "discord", label: "DISCORD", handle: "@yourname", href: "https://discord.com/users/yourid", Icon: IconDiscord },
-  { id: "instagram", label: "INSTAGRAM", handle: "@yourhandle", href: "https://instagram.com/yourhandle", Icon: IconInstagram },
-  { id: "kofi", label: "KO-FI", handle: "ko-fi.com/yourname", href: "https://ko-fi.com/yourname", Icon: IconKofi },
-  { id: "roblox", label: "ROBLOX", handle: "@yourname", href: "https://www.roblox.com/users/yourid/profile", Icon: IconRoblox },
-  { id: "spotify", label: "SPOTIFY", handle: "your profile", href: "https://open.spotify.com/user/yourid", Icon: IconSpotify },
-  { id: "github", label: "GITHUB", handle: "@yourname", href: "https://github.com/yourname", Icon: IconGithub },
-  { id: "steam", label: "STEAM", handle: "@yourname", href: "https://steamcommunity.com/id/yourname", Icon: IconSteam }
+  { id: "discord", label: "DISCORD", handle: "@leesys", href: "https://discord.com/users/1556364356361519184", Icon: IconDiscord },
+  { id: "instagram", label: "INSTAGRAM", handle: "@lilee", href: "https://instagram.com/lee.llsys", Icon: IconInstagram },
+  { id: "kofi", label: "KO-FI", handle: "ko-fi.com/leesys", href: "https://ko-fi.com/leesys", Icon: IconKofi },
+  { id: "roblox", label: "ROBLOX", handle: "@sxfthazu", href: "https://www.roblox.com/users/164693082/profile", Icon: IconRoblox },
+  { id: "spotify", label: "SPOTIFY", handle: "lee_ko", href: "https://open.spotify.com/user/yourid", Icon: IconSpotify },
+  { id: "github", label: "GITHUB", handle: "@hachzu", href: "https://github.com/hachzu", Icon: IconGithub },
+  { id: "steam", label: "STEAM", handle: "@yourname", href: "https://steamcommunity.com/profiles/76561199114238463/", Icon: IconSteam }
 ];
 
 // how far each slot is from the middle, how big it is, and how visible
