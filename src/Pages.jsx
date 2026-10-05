@@ -577,7 +577,7 @@ const IconSteam = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 
 const SOCIALS_ITEMS = [
   { id: "discord", label: "DISCORD", handle: "@leesys", href: "https://discord.com/users/1556364356361519184", Icon: IconDiscord },
-  { id: "instagram", label: "INSTAGRAM", handle: "@lilee", href: "https://instagram.com/lee.llsys", Icon: IconInstagram },
+  { id: "instagram", label: "INSTAGRAM", handle: "@lillee", href: "https://instagram.com/lee.llsys", Icon: IconInstagram },
   { id: "kofi", label: "KO-FI", handle: "ko-fi.com/leesys", href: "https://ko-fi.com/leesys", Icon: IconKofi },
   { id: "roblox", label: "ROBLOX", handle: "@sxfthazu", href: "https://www.roblox.com/users/164693082/profile", Icon: IconRoblox },
   { id: "spotify", label: "SPOTIFY", handle: "lee_ko", href: "https://open.spotify.com/user/yourid", Icon: IconSpotify },
