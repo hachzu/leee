@@ -773,6 +773,699 @@ export function Socials() {
 }
 
 // ─────────────────────────────────────────────
+// Skills: the Persona 3 Reload "Social Stats" Venn diagram, used as a hub for several categories.
+//   One colour-coded bubble per category. They spiral in, then pop. The white arrow in the middle
+//   points at the selected bubble, and the list on the left shows that category's content.
+//   ←/→ (or ↑/↓, A/D, LB / RB, the dots, hover, click) switch category. Esc goes back.
+//
+// To edit (everything in SKILL_GROUPS is placeholder):
+//   Add or remove a whole object to add or remove a bubble. The bubbles lay themselves out in a ring
+//   (3 to 6 look best), so you never have to place them by hand.
+//   name / tag / icon - the bubble's name, the black label under it, and the small symbol
+//   color            - the colour of the bubble AND of that category's list on the left
+//   type: "bars"     - skills with a progress bar: items: [{ name, pct }]  (pct = 0 to 100)
+//                      the big number in the bubble is the average of the pct values
+//   type: "list"     - education, projects, anything else: items: [{ title, sub, tag }]
+//                      sub and tag are optional (tag = small coloured chip on the right)
+//                      the big number in the bubble is how many items there are
+// All styles for this page are in skillsStyles just below (so no extra css file is needed).
+// Every class starts with "sk-" (never "ad-", so ad blockers leave them alone).
+// ─────────────────────────────────────────────
+const SKILL_GROUPS = [
+  {
+    id: "code", name: "Code", tag: "Logic & Syntax", icon: "✦", color: "#3f9bff", type: "bars",
+    items: [
+      { name: "Java", pct: 65 },
+      { name: "JavaScript", pct: 60 },
+      { name: "SQL", pct: 55 },
+      { name: "HTML & CSS", pct: 70 }
+    ]
+  },
+  {
+    id: "design", name: "Design", tag: "Eye For Detail", icon: "❖", color: "#ff5c93", type: "bars",
+    items: [
+      { name: "UI / UX", pct: 75 },
+      { name: "Figma", pct: 70 },
+      { name: "Illustration", pct: 60 },
+      { name: "Branding", pct: 40 }
+    ]
+  },
+  {
+    id: "tools", name: "Tools", tag: "Daily Drivers", icon: "◆", color: "#2fd6a4", type: "bars",
+    items: [
+      { name: "VS Code", pct: 80 },
+      { name: "Git", pct: 55 },
+      { name: "Photoshop", pct: 50 },
+      { name: "Notion", pct: 65 }
+    ]
+  },
+  {
+    id: "edu", name: "Education", tag: "Always Learning", icon: "★", color: "#ffb830", type: "list",
+    items: [
+      { title: "University name", sub: "BS Computer Science", tag: "2023 — NOW" },
+      { title: "Senior High School", sub: "strand / track", tag: "2021 — 2023" },
+      { title: "Online Courses", sub: "CS50, freeCodeCamp, etc.", tag: "ONGOING" }
+    ]
+  },
+  {
+    id: "projects", name: "Projects", tag: "Things I Made", icon: "▣", color: "#a674ff", type: "list",
+    items: [
+      { title: "This Website", sub: "Persona 3 Reload styled portfolio · React", tag: "LIVE" },
+      { title: "Project two", sub: "short description", tag: "WIP" },
+      { title: "Project three", sub: "short description", tag: "IDEA" }
+    ]
+  }
+];
+
+const skillValue = g => g.type === "bars" ? Math.round(g.items.reduce((s, k) => s + k.pct, 0) / g.items.length) : g.items.length;
+
+// Bubble layout: the bubbles sit on a ring, evenly spaced, starting from the top.
+// RING_R is chosen so neighbouring bubbles always overlap by the same amount, whatever the count.
+const SK_COUNT = SKILL_GROUPS.length;
+const SK_RING_R = SK_COUNT > 1 ? 0.33 / Math.sin(Math.PI / SK_COUNT) : 0; // in bubble diameters
+const SK_EXTENT = SK_RING_R + 0.54; // how far the diagram reaches from the middle, in bubble diameters
+const SK_NODES = SKILL_GROUPS.map((g, i) => {
+  const ang = (-90 + (360 * i) / SK_COUNT) * (Math.PI / 180);
+  const ux = Math.cos(ang);
+  const uy = Math.sin(ang);
+  return {
+    dx: ux * SK_RING_R,
+    dy: uy * SK_RING_R,
+    deg: (ang * 180) / Math.PI,                   // direction the white arrow turns to
+    lx: `${(50 + ux * 8).toFixed(1)}%`,           // label sits slightly toward the outside of its bubble
+    ly: `${(50 + uy * 8).toFixed(1)}%`,
+    spin: 110 + (i % 3) * 20                      // how far it turns while spiralling in (degrees)
+  };
+});
+
+const skillsStyles = `
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:wght@300;700&display=swap');
+
+/* No dark panel, no lines: the background video is left exactly as it is.
+   --E (set inline) is how far the diagram reaches, so the bubbles shrink as you add more of them. */
+.sk-page {
+  --d: min(calc(26vw / var(--E)), calc(37vh / var(--E)));   /* diameter of one bubble */
+  --ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ───────── title: same look as the main menu buttons, text only ───────── */
+.sk-title {
+  position: absolute;
+  left: 2.6vw;
+  top: 7vh;
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(60px, 9vw, 140px);
+  letter-spacing: 2px;
+  line-height: 0.85;
+  color: #3ce2ff;
+  transform: skewY(-4deg);
+  transform-origin: left center;
+  white-space: nowrap;
+  user-select: none;
+  animation: sk-drop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+@keyframes sk-drop {
+  from { opacity: 0; translate: 0 -24px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+/* ───────── ◄ LB  ◆◆◆  RB ►  (copied from the Socials page) ───────── */
+.sk-nav {
+  position: absolute;
+  top: 5vh;
+  right: 3vw;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: auto;
+  animation: sk-drop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+.sk-lb, .sk-rb {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(30px, 4.2vw, 56px);
+  letter-spacing: 3px;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 1.5px #000;
+  paint-order: stroke fill;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.sk-lb:hover, .sk-rb:hover { color: #3ce2ff; transform: scale(1.08) skewX(-6deg); }
+.sk-dots { display: flex; gap: 10px; align-items: center; }
+.sk-dot {
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid #000;
+  transform: rotate(45deg);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.sk-dot:hover { background: #fff; }
+.sk-dot.on { background: #c4001a; transform: rotate(45deg) scale(1.35); }
+
+/* ───────── content list (left). --c = the selected category's colour ───────── */
+.sk-list {
+  position: absolute;
+  left: 2.6vw;
+  top: 27vh;
+  width: min(33vw, 560px);
+  max-height: calc(100vh - 27vh - 90px);
+  overflow-y: auto;
+  padding-right: 6px;
+  pointer-events: auto;
+  scrollbar-width: none;
+}
+.sk-list::-webkit-scrollbar { display: none; }
+.sk-list-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  animation: sk-row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sk-list-head i { width: 10px; height: 10px; background: var(--c); transform: rotate(45deg); flex-shrink: 0; }
+.sk-list-head span {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(18px, 1.6vw, 24px);
+  letter-spacing: 5px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+.sk-list-head b {
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c), rgba(255, 255, 255, 0));
+  transform: skewX(-30deg);
+}
+
+.sk-row {
+  position: relative;
+  margin-bottom: 8px;
+  padding: 7px 24px 9px 14px;
+  background: rgba(0, 0, 0, 0.9);
+  border-left: 4px solid var(--c);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  animation: sk-row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--n) * 50ms + 60ms);
+}
+@keyframes sk-row-in {
+  0%   { opacity: 0; transform: translateX(-50px); }
+  60%  { opacity: 1; transform: translateX(5px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.sk-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sk-row-name {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(18px, 1.55vw, 24px);
+  letter-spacing: 1px;
+  line-height: 1.1;
+  color: #fff;
+}
+.sk-row-pct {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: clamp(18px, 1.55vw, 24px);
+  letter-spacing: 1px;
+  color: var(--c);
+  filter: brightness(1.3);
+}
+.sk-row-pct small { font-size: 0.6em; margin-left: 2px; }
+.sk-track {
+  height: 9px;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  transform: skewX(-20deg);
+}
+.sk-fill {
+  height: 100%;
+  width: var(--w);
+  background: #fff;
+  box-shadow: 3px 0 0 var(--c);
+  transform-origin: left center;
+  animation: sk-fill 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--n) * 50ms + 180ms);
+}
+@keyframes sk-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+/* rows of a "list" category (education, projects...) */
+.sk-chip {
+  flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(13px, 1.1vw, 17px);
+  letter-spacing: 2px;
+  line-height: 1;
+  color: #04122e;
+  background: var(--c);
+  padding: 4px 14px 4px 10px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+}
+.sk-item-sub {
+  margin-top: 3px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  font-size: clamp(12px, 0.95vw, 14px);
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ───────── the Venn diagram ───────── */
+/* .sk-center is a zero-size anchor in the middle of the diagram.
+   isolation keeps the "screen" blend between the circles only, never with the video behind. */
+.sk-center {
+  position: absolute;
+  left: 70vw;
+  top: 53vh;
+  width: 0;
+  height: 0;
+  isolation: isolate;
+}
+.sk-float {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+
+/* SPIRAL ENTRY (fast, one gentle turn). The orbit is a zero-size element at the diagram's centre.
+   It starts turned back a little and small, then unwinds to 0 while growing; the bubble sits at a
+   fixed offset inside it, so it sweeps in along a short spiral and then eases to a stop.
+   To change the speed, change the 1.1s here and in .sk-label (keep the two equal). */
+.sk-orbit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  animation: sk-spiral 1.1s var(--ease) both;
+  animation-delay: calc(0.15s + var(--i) * 0.1s);
+}
+@keyframes sk-spiral {
+  0%   { transform: rotate(calc(var(--a) * -1)) scale(0.2); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+/* the circles are blended with "screen", so where they overlap the colour gets lighter */
+.sk-orbit-disc { mix-blend-mode: screen; }
+
+/* fixed offset of each bubble from the centre (set inline with --dx / --dy, in bubble diameters) */
+.sk-pos {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: translate(calc(var(--d) * var(--dx)), calc(var(--d) * var(--dy)));
+}
+.sk-bubble {
+  position: absolute;
+  left: calc(var(--d) / -2);
+  top: calc(var(--d) / -2);
+  width: var(--d);
+  height: var(--d);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
+}
+.sk-bubble.active { transform: scale(1.06); filter: brightness(1.15); }
+
+/* every circle is exactly the same size and perfectly round */
+.sk-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--c);
+  opacity: 0.9;
+  pointer-events: auto;
+  cursor: pointer;
+  /* SMOOTH POP: right as the spiral lands, the bubble swells a little and settles */
+  animation: sk-pop 0.6s ease-in-out both;
+  animation-delay: calc(0.15s + var(--i) * 0.1s + 0.85s);
+}
+/* thin outer ring: same centre, same width all the way round */
+.sk-disc::after {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  opacity: 0.6;
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+.sk-bubble.active .sk-disc::after { border-color: #fff; opacity: 0.95; }
+@keyframes sk-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* labels live in their own orbit (same spiral), so they are NOT blended and stay crisp */
+.sk-label-pos {
+  position: absolute;
+  left: var(--lx);
+  top: var(--ly);
+  width: 0;
+  height: 0;
+}
+/* the label counter-rotates the spiral (start angle = spiral angle, same duration and easing),
+   so the text always reads at its final tilt and never ends up upside down */
+.sk-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  animation: sk-counter 1.1s var(--ease) both;
+  animation-delay: calc(0.15s + var(--i) * 0.1s);
+  white-space: nowrap;
+  text-align: left;
+}
+@keyframes sk-counter {
+  from { transform: translate(-50%, -50%) rotate(calc(var(--a) - 14deg)); }
+  to   { transform: translate(-50%, -50%) rotate(-14deg); }
+}
+.sk-label-pop {
+  animation: sk-pop 0.6s ease-in-out both;
+  animation-delay: calc(0.15s + var(--i) * 0.1s + 0.85s);
+}
+.sk-max {
+  display: block;
+  margin: 0 0 calc(var(--d) * -0.02) calc(var(--d) * 0.2);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: calc(var(--d) * 0.045);
+  letter-spacing: calc(var(--d) * 0.03);
+  color: #fff;
+}
+.sk-line { display: flex; align-items: center; gap: calc(var(--d) * 0.03); }
+.sk-num {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: calc(var(--d) * 0.24);
+  line-height: 1;
+  color: #fff;
+  min-width: 0.7em;
+}
+.sk-num small { font-size: 0.4em; margin-left: 2px; }
+.sk-name {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: calc(var(--d) * 0.12);
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #fff;
+}
+.sk-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--d) * 0.03);
+  margin-top: calc(var(--d) * 0.03);
+  padding: calc(var(--d) * 0.012) calc(var(--d) * 0.07) calc(var(--d) * 0.012) calc(var(--d) * 0.03);
+  background: #000;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.sk-sub i {
+  font-style: normal;
+  font-size: calc(var(--d) * 0.065);
+  line-height: 1;
+  color: var(--c);
+  filter: brightness(1.4);
+}
+.sk-sub span {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  font-size: calc(var(--d) * 0.052);
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+/* white arrow in the middle, turns to point at the selected bubble */
+.sk-tri {
+  position: absolute;
+  left: calc(var(--d) * -0.16);
+  top: calc(var(--d) * -0.14);
+  width: calc(var(--d) * 0.3);
+  height: calc(var(--d) * 0.28);
+  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.5, 1);
+  z-index: 5;
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.45));
+}
+.sk-tri-in {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.97) 0%, rgba(190, 240, 255, 0.4) 100%);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  animation: sk-tri-in 0.5s cubic-bezier(0.34, 1.4, 0.5, 1) 0.9s both;
+}
+@keyframes sk-tri-in {
+  from { transform: scale(0) rotate(-90deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
+/* ───────── hints ───────── */
+.sk-hint {
+  position: fixed;
+  bottom: 22px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-family: 'Anton', sans-serif;
+  z-index: 14;
+  animation: sk-drop 0.4s ease 0.4s both;
+}
+.sk-hint-row {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  letter-spacing: 2.5px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.sk-hint-key {
+  box-sizing: border-box;
+  width: 46px;
+  padding: 4px 0 3px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 18px;
+  letter-spacing: 0;
+  text-align: center;
+}
+.sk-mobile-controls { display: none; }
+.sk-mobile-btn {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1.2px;
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  min-width: 84px;
+}
+
+/* ───────── small screens: bubbles on top, list underneath ───────── */
+@media (max-width: 1024px) {
+  .sk-page { --d: min(calc(42vw / var(--E)), calc(21vh / var(--E))); }
+  .sk-title { top: 2vh; left: 4vw; font-size: clamp(44px, 12vw, 72px); }
+  .sk-nav { top: 10.5vh; left: 0; right: 0; justify-content: center; gap: 8px; }
+  .sk-lb, .sk-rb { font-size: 26px; }
+  .sk-dots { gap: 6px; }
+  .sk-dot { width: 9px; height: 9px; }
+  .sk-center { left: 50vw; top: 38vh; }
+  .sk-list { left: 4vw; top: auto; bottom: 66px; width: 92vw; max-height: 36vh; }
+  .sk-list-head { margin-bottom: 6px; }
+  .sk-row { margin-bottom: 5px; padding: 5px 20px 6px 12px; }
+  .sk-hint { display: none; }
+  .sk-mobile-controls {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    pointer-events: all;
+  }
+}
+`;
+
+// counts up from 0 once the spiral has landed
+function CountUp({ to, delay }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let raf;
+    let t0;
+    const start = setTimeout(() => {
+      const tick = ts => {
+        if (!t0) t0 = ts;
+        const p = Math.min(1, (ts - t0) / 800);
+        setV(Math.round(to * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => {
+      clearTimeout(start);
+      cancelAnimationFrame(raf);
+    };
+  }, [to, delay]);
+  return v;
+}
+
+export function SkillsPage() {
+  const N = SKILL_GROUPS.length;
+  const [active, setActive] = useState(0);
+  const [ang, setAng] = useState(SK_NODES[0].deg);
+  const angRef = useRef(SK_NODES[0].deg);
+  const navigate = useNavigate();
+
+  // turn the arrow the short way round
+  useEffect(() => {
+    const d = ((((SK_NODES[active].deg - angRef.current) % 360) + 540) % 360) - 180;
+    angRef.current += d;
+    setAng(angRef.current);
+  }, [active]);
+
+  const select = i => {
+    if (i === active) return;
+    playNav();
+    setActive(i);
+  };
+  const step = dir => {
+    playNav();
+    setActive(a => (a + dir + N) % N);
+  };
+  const back = () => {
+    playBack();
+    navigate(-1);
+  };
+
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "d" || e.key === "D") step(1);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "a" || e.key === "A") step(-1);
+      else if (e.key === "Escape" || e.key === "Backspace") back();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
+
+  const cur = SKILL_GROUPS[active];
+
+  // shared inline vars for one bubble's orbit / position
+  const orbitVars = (nd, i) => ({ "--i": i, "--a": `${nd.spin}deg` });
+  const posVars = nd => ({ "--dx": nd.dx, "--dy": nd.dy });
+
+  return <div id="menu-screen">
+      <BgVideo src={VIDEO.skills} poster={poster_main2} />
+      <style>{skillsStyles}</style>
+
+      <div className="sk-page" style={{ "--E": SK_EXTENT }}>
+        <div className="sk-title">SKILLS</div>
+
+        <div className="sk-nav">
+          <span className="sk-lb" onClick={() => step(-1)}>◄ LB</span>
+          <div className="sk-dots">
+            {SKILL_GROUPS.map((g, i) => <span key={g.id} className={`sk-dot${i === active ? " on" : ""}`} onClick={() => select(i)} />)}
+          </div>
+          <span className="sk-rb" onClick={() => step(1)}>RB ►</span>
+        </div>
+
+        {/* content of the selected category, tinted with its colour */}
+        <div className="sk-list" key={cur.id} style={{ "--c": cur.color }}>
+          <div className="sk-list-head"><i /><span>{cur.name.toUpperCase()}</span><b /></div>
+          {cur.type === "bars" && cur.items.map((s, n) => <div className="sk-row" style={{ "--n": n }} key={s.name}>
+              <div className="sk-row-top">
+                <span className="sk-row-name">{s.name}</span>
+                <span className="sk-row-pct">{s.pct}<small>%</small></span>
+              </div>
+              <div className="sk-track"><div className="sk-fill" style={{ "--w": `${s.pct}%` }} /></div>
+            </div>)}
+          {cur.type === "list" && cur.items.map((it, n) => <div className="sk-row" style={{ "--n": n }} key={it.title}>
+              <div className="sk-row-top">
+                <span className="sk-row-name">{it.title}</span>
+                {it.tag && <span className="sk-chip">{it.tag}</span>}
+              </div>
+              {it.sub && <div className="sk-item-sub">{it.sub}</div>}
+            </div>)}
+        </div>
+
+        {/* the Venn diagram */}
+        <div className="sk-center">
+          <div className="sk-float">
+
+            {/* layer 1: the blended circles */}
+            {SKILL_GROUPS.map((g, i) => <div className="sk-orbit sk-orbit-disc" style={orbitVars(SK_NODES[i], i)} key={g.id}>
+                <div className="sk-pos" style={posVars(SK_NODES[i])}>
+                  <div className={`sk-bubble${active === i ? " active" : ""}`}>
+                    <div className="sk-disc" style={{ "--c": g.color, "--i": i }} onMouseEnter={() => select(i)} onClick={() => { playEnter(); setActive(i); }} />
+                  </div>
+                </div>
+              </div>)}
+
+            {/* the arrow */}
+            <div className="sk-tri" style={{ transform: `rotate(${ang}deg)` }}>
+              <div className="sk-tri-in" />
+            </div>
+
+            {/* layer 2: the labels (not blended, so the black bars stay black) */}
+            {SKILL_GROUPS.map((g, i) => {
+              const nd = SK_NODES[i];
+              const v = skillValue(g);
+              return <div className="sk-orbit" style={{ ...orbitVars(nd, i), pointerEvents: "none" }} key={g.id}>
+                <div className="sk-pos" style={posVars(nd)}>
+                  <div className={`sk-bubble${active === i ? " active" : ""}`} style={{ pointerEvents: "none", filter: "none" }}>
+                    <div className="sk-label-pos" style={{ "--lx": nd.lx, "--ly": nd.ly }}>
+                      <div className="sk-label" style={{ "--a": `${nd.spin}deg`, "--i": i, "--c": g.color }}>
+                        <div className="sk-label-pop" style={{ "--i": i }}>
+                          {g.type === "bars" && v >= 90 && <span className="sk-max">M A X</span>}
+                          <div className="sk-line">
+                            <span className="sk-num"><CountUp to={v} delay={150 + i * 100 + 700} />{g.type === "bars" && <small>%</small>}</span>
+                            <span className="sk-name">{g.name}</span>
+                          </div>
+                          <div className="sk-sub"><i>{g.icon}</i><span>{g.tag}</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>;
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="sk-hint">
+        <div className="sk-hint-row"><span className="sk-hint-key">←→</span><span>SELECT</span></div>
+        <div className="sk-hint-row"><span className="sk-hint-key">ESC</span><span>BACK</span></div>
+      </div>
+
+      <div className="sk-mobile-controls" aria-label="Skills mobile controls">
+        <button className="sk-mobile-btn" type="button" onClick={back}>BACK</button>
+        <button className="sk-mobile-btn" type="button" onClick={() => step(1)}>NEXT</button>
+      </div>
+    </div>;
+}
+
+// ─────────────────────────────────────────────
 // Splash: entry page with a "READ BEFORE YOU PROCEED" notice (left),
 // a divider, and the CONTINUE button + loading bar (right).
 // The click is what lets the browser play sound.

@@ -11,7 +11,7 @@ import poster_main2 from "./assets/main2_poster.jpg";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { AboutMe, Socials, Splash, WebDeck, playNav, playEnter, playBack, playOpenOnStart, getMenuVideoSrc, warmVideos, VIDEO } from './Pages.jsx';
+import { AboutMe, Socials, SkillsPage, Splash, WebDeck, playNav, playEnter, playBack, playOpenOnStart, getMenuVideoSrc, warmVideos, VIDEO } from './Pages.jsx';
 import './styles.css';
 import BgVideo from './BgVideo.jsx';
 
@@ -185,7 +185,7 @@ function P3Menu({
 }
 
 // ─────────────────────────────────────────────
-// Resume cards (template, still used by /resume, /skills and /blogs)
+// Resume cards (template, still used by /resume and /blogs)
 // ─────────────────────────────────────────────
 const RESUMEPAGE_ITEMS = [{
   id: "i",
@@ -544,9 +544,10 @@ function AnimatedRoutes() {
         <Route path="/about" element={<PageTransition variant="about"><AboutMe /></PageTransition>} />
         <Route path="/socials" element={<PageTransition variant="socials"><Socials /></PageTransition>} />
 
-        {/* New menu pages. Both reuse the Resume template as a placeholder.
-            Replace ResumePage with your own SkillsPage / BlogsPage later. */}
-        <Route path="/skills" element={<PageTransition><ResumePage src={VIDEO.skills} poster={poster_main2} title="SKILLS" /></PageTransition>} />
+        {/* Skills is the Venn diagram page (SkillsPage in Pages.jsx).
+            Blogs still reuses the Resume template as a placeholder.
+            Replace ResumePage with your own BlogsPage later. */}
+        <Route path="/skills" element={<PageTransition><SkillsPage /></PageTransition>} />
         <Route path="/blogs" element={<PageTransition><ResumePage src={VIDEO.about} poster={poster_main1} title="BLOGS" /></PageTransition>} />
 
         {/* Original Resume page, kept as a template. Not linked from the menu,
