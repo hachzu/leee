@@ -571,9 +571,6 @@ const aboutTweaks = `
 .abt-side .abt-detail { font-size: 12px; }
 .abt-side .abt-tag { font-size: 17px; padding: 4px 14px 4px 9px; }
 
-/* ───────── left list: cyan underlay under the active bar instead of red ───────── */
-.sc-bar-red { background: #3ce2ff; }
-
 /* ───────── group divider (e.g. INTERESTS): just the title and a line you can actually see ───────── */
 .sc-group {
   width: 45vw;
