@@ -966,8 +966,6 @@ export function Socials() {
         <div className="so-shade" />
         <div className={`so-band${mounted ? " mounted" : ""}`} />
 
-        <div className={`so-title${mounted ? " mounted" : ""}`}>SOCIALS</div>
-
         <div className={`so-nav${mounted ? " mounted" : ""}`}>
           <span className="so-lb" onClick={() => move(-1)}>◄ LB</span>
           <div className="so-dots">
@@ -1134,23 +1132,6 @@ const skillsStyles = `
   pointer-events: none;
 }
 
-/* ───────── title: same look as the main menu buttons, text only ───────── */
-.sk-title {
-  position: absolute;
-  left: 2.6vw;
-  top: 7vh;
-  font-family: 'Anton', sans-serif;
-  font-style: italic;
-  font-size: clamp(60px, 9vw, 140px);
-  letter-spacing: 2px;
-  line-height: 0.85;
-  color: #3ce2ff;
-  transform: skewY(-4deg);
-  transform-origin: left center;
-  white-space: nowrap;
-  user-select: none;
-  animation: sk-drop 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
-}
 @keyframes sk-drop {
   from { opacity: 0; translate: 0 -24px; }
   to   { opacity: 1; translate: 0 0; }
@@ -1542,7 +1523,6 @@ const skillsStyles = `
 /* ───────── small screens: bubbles on top, list underneath ───────── */
 @media (max-width: 1024px) {
   .sk-page { --d: min(calc(42vw / var(--E)), calc(21vh / var(--E))); }
-  .sk-title { top: 2vh; left: 4vw; font-size: clamp(44px, 12vw, 72px); }
   .sk-nav { top: 10.5vh; left: 0; right: 0; justify-content: center; gap: 8px; }
   .sk-lb, .sk-rb { font-size: 26px; }
   .sk-dots { gap: 6px; }
@@ -1639,7 +1619,6 @@ export function SkillsPage() {
       <style>{skillsStyles}</style>
 
       <div className="sk-page" style={{ "--E": SK_EXTENT }}>
-        <div className="sk-title">SKILLS</div>
 
         <div className="sk-nav">
           <span className="sk-lb" onClick={() => step(-1)}>◄ LB</span>
