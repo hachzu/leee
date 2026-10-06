@@ -426,16 +426,15 @@ const aboutTweaks = `
 }
 .abt-panel.has-side { width: min(50vw, 940px); }
 
-/* OPENING: the slab stays where it is. A slanted edge sweeps across it from the top right and
-   reveals it (a slash), the two side lines draw down, then the header, titles and rows pop in
-   one after another (their delays are set in the component). Timings: reveal .55s, header .42s,
-   rows start at .52s. */
+/* OPENING: the slab stays where it is and is drawn from the top down (a slash being cut downward).
+   The two side lines draw down with it, then the header, titles and rows pop in one after another
+   (their delays are set in the component). Timings: reveal .6s, header .45s, rows start at .55s. */
 @keyframes abt-slash-reveal {
-  from { clip-path: polygon(140% 0, 100% 0, 100% 100%, 100% 100%); }
-  to   { clip-path: polygon(-20% -10%, 120% -10%, 120% 110%, -60% 110%); }
+  from { clip-path: polygon(-20% -10%, 120% -10%, 120% -10%, -20% -10%); }
+  to   { clip-path: polygon(-20% -10%, 120% -10%, 120% 110%, -20% 110%); }
 }
 @keyframes abt-side-reveal {
-  from { clip-path: polygon(140% 0, 100% 0, 100% 100%, 100% 100%, 100% 100%); }
+  from { clip-path: polygon(0 0, 100% 0, 100% 0, 50% 0, 0 0); }
   to   { clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 20px), 0 100%); }
 }
 @keyframes abt-head-in {
@@ -472,7 +471,7 @@ const aboutTweaks = `
   background: rgba(6, 18, 52, 0.94);
 }
 .abt-panel.has-side .abt-shell { --pad-r: 30px; }
-.abt-shell.fresh { animation: abt-slash-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.abt-shell.fresh { animation: abt-slash-reveal 0.6s cubic-bezier(0.3, 0.7, 0.2, 1) backwards; }
 /* the left edge stripe: red tip at the top, then cyan fading into blue */
 .abt-shell::before {
   top: 0;
@@ -494,7 +493,7 @@ const aboutTweaks = `
   clip-path: none;
   animation: abt-head-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.abt-shell.fresh .abt-head { animation-delay: 0.42s; }
+.abt-shell.fresh .abt-head { animation-delay: 0.45s; }
 .abt-sec-title { animation: ad-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .abt-title { font-style: normal; font-size: 44px; color: #06133b; }
 .abt-chip { background: #06133b; color: #8df6ff; }
@@ -528,7 +527,7 @@ const aboutTweaks = `
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 20px), 0 100%); /* swallowtail end */
   animation: abt-fade 0.3s ease both;
 }
-.abt-side.fresh { animation: abt-side-reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards; }
+.abt-side.fresh { animation: abt-side-reveal 0.5s cubic-bezier(0.3, 0.7, 0.2, 1) 0.15s backwards; }
 .abt-side::before {
   content: "";
   position: absolute;
@@ -545,7 +544,7 @@ const aboutTweaks = `
   background: #fff;
   animation: abt-head-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.abt-side.fresh .abt-side-head { animation-delay: 0.5s; }
+.abt-side.fresh .abt-side-head { animation-delay: 0.58s; }
 .abt-side-head span {
   font-family: 'Anton', sans-serif;
   font-size: 22px;
@@ -668,7 +667,7 @@ function AboutSection({ sec, delay }) {
     </section>;
 }
 
-// The slanted slash that sweeps in from the top right of the About page.
+// The slanted slash on the right of the About page. It is drawn from the top down when it opens.
 // If the button has a "side" list, a narrow banner hangs from the top next to it.
 function AboutDetail({ item, chip }) {
   // "fresh" = the slash is opening right now. Switching tabs while it is already open skips the big
@@ -677,7 +676,7 @@ function AboutDetail({ item, chip }) {
   const shown = useRef({ id: null, fresh: false });
   if (shown.current.id !== item.id) shown.current = { id: item.id, fresh: Date.now() - born.current < 1000 };
   const fresh = shown.current.fresh;
-  const first = fresh ? 520 : 120; // ms before the first title / row pops in (after the reveal)
+  const first = fresh ? 560 : 120; // ms before the first title / row pops in (after the reveal)
   const step = fresh ? 45 : 55;    // ms between one title / row and the next
   const makeDelay = start => {
     let n = 0;
