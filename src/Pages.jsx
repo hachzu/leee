@@ -422,14 +422,29 @@ const aboutTweaks = `
   flex-direction: row;
   align-items: stretch;
   transform: skewX(calc(var(--lean) * -1));
-  animation: abt-slash-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: none;
 }
 .abt-panel.has-side { width: min(50vw, 940px); }
-@keyframes abt-slash-in {
-  0%   { translate: 62vw -70vh; opacity: 0; }
-  50%  { opacity: 1; }
-  78%  { translate: -1.2vw 1.6vh; }
-  100% { translate: 0 0; opacity: 1; }
+
+/* OPENING: the slab stays where it is. A slanted edge sweeps across it from the top right and
+   reveals it (a slash), the two side lines draw down, then the header, titles and rows pop in
+   one after another (their delays are set in the component). Timings: reveal .55s, header .42s,
+   rows start at .52s. */
+@keyframes abt-slash-reveal {
+  from { clip-path: polygon(140% 0, 100% 0, 100% 100%, 100% 100%); }
+  to   { clip-path: polygon(-20% -10%, 120% -10%, 120% 110%, -60% 110%); }
+}
+@keyframes abt-side-reveal {
+  from { clip-path: polygon(140% 0, 100% 0, 100% 100%, 100% 100%, 100% 100%); }
+  to   { clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 20px), 0 100%); }
+}
+@keyframes abt-head-in {
+  from { opacity: 0; transform: translateX(-34px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes abt-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* two thin lines running alongside the slash's left edge */
@@ -440,7 +455,7 @@ const aboutTweaks = `
   bottom: 0;
   pointer-events: none;
   transform-origin: top;
-  animation: abt-line-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  animation: abt-line-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 .abt-panel::before { left: -16px; width: 4px; background: #fff; }
 .abt-panel::after  { left: -27px; width: 2px; background: #3ce2ff; }
@@ -457,6 +472,7 @@ const aboutTweaks = `
   background: rgba(6, 18, 52, 0.94);
 }
 .abt-panel.has-side .abt-shell { --pad-r: 30px; }
+.abt-shell.fresh { animation: abt-slash-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
 /* the left edge stripe: red tip at the top, then cyan fading into blue */
 .abt-shell::before {
   top: 0;
@@ -476,7 +492,10 @@ const aboutTweaks = `
   margin: 14vh 0 16px -36px;
   padding: 10px var(--pad-r) 10px 56px;
   clip-path: none;
+  animation: abt-head-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.abt-shell.fresh .abt-head { animation-delay: 0.42s; }
+.abt-sec-title { animation: ad-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .abt-title { font-style: normal; font-size: 44px; color: #06133b; }
 .abt-chip { background: #06133b; color: #8df6ff; }
 
@@ -507,13 +526,9 @@ const aboutTweaks = `
   padding-top: 14vh;
   background: rgba(6, 18, 52, 0.94);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 20px), 0 100%); /* swallowtail end */
-  animation: abt-side-in 0.55s cubic-bezier(0.34, 1.3, 0.5, 1) 0.3s both;
+  animation: abt-fade 0.3s ease both;
 }
-@keyframes abt-side-in {
-  0%   { translate: 0 -105%; }
-  70%  { translate: 0 3%; }
-  100% { translate: 0 0; }
-}
+.abt-side.fresh { animation: abt-side-reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards; }
 .abt-side::before {
   content: "";
   position: absolute;
@@ -528,7 +543,9 @@ const aboutTweaks = `
   margin-bottom: 4px;
   padding: 7px 18px 7px 20px;
   background: #fff;
+  animation: abt-head-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.abt-side.fresh .abt-side-head { animation-delay: 0.5s; }
 .abt-side-head span {
   font-family: 'Anton', sans-serif;
   font-size: 22px;
@@ -627,7 +644,7 @@ const aboutCss = aboutStyles.replace(/\.ad-/g, ".abt-") + aboutTweaks;
 // One section of a card (also used inside the side tab).
 function AboutSection({ sec, delay }) {
   return <section className="abt-sec">
-      <div className="abt-sec-title">{sec.title}<b /></div>
+      <div className="abt-sec-title" style={delay()}>{sec.title}<b /></div>
       {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="abt-row" style={delay()} key={k}>
           <span className="abt-k">{k}</span>
           <span className="abt-v">{v}</span>
@@ -654,10 +671,22 @@ function AboutSection({ sec, delay }) {
 // The slanted slash that sweeps in from the top right of the About page.
 // If the button has a "side" list, a narrow banner hangs from the top next to it.
 function AboutDetail({ item, chip }) {
-  let n = 0; // counts rows so they pop in one after another
-  const delay = () => ({ animationDelay: `${120 + n++ * 55}ms` });
+  // "fresh" = the slash is opening right now. Switching tabs while it is already open skips the big
+  // reveal and only does a quick fade, so hovering around the list never replays the whole sequence.
+  const born = useRef(Date.now());
+  const shown = useRef({ id: null, fresh: false });
+  if (shown.current.id !== item.id) shown.current = { id: item.id, fresh: Date.now() - born.current < 1000 };
+  const fresh = shown.current.fresh;
+  const first = fresh ? 520 : 120; // ms before the first title / row pops in (after the reveal)
+  const step = fresh ? 45 : 55;    // ms between one title / row and the next
+  const makeDelay = start => {
+    let n = 0;
+    return () => ({ animationDelay: `${start + n++ * step}ms` });
+  };
+  const delay = makeDelay(first);
+  const sideDelay = makeDelay(first + 60);
   return <aside className={`abt-panel${item.side ? " has-side" : ""}`}>
-      <div className="abt-shell" key={item.id}>
+      <div className={`abt-shell${fresh ? " fresh" : ""}`} key={item.id}>
         <div className="abt-head">
           <span className="abt-title">{item.label}</span>
           <span className="abt-chip">{chip}</span>
@@ -666,10 +695,10 @@ function AboutDetail({ item, chip }) {
           {item.sections.map(sec => <AboutSection sec={sec} delay={delay} key={sec.title} />)}
         </div>
       </div>
-      {item.side && <div className="abt-side" key={`${item.id}-side`}>
+      {item.side && <div className={`abt-side${fresh ? " fresh" : ""}`} key={`${item.id}-side`}>
           <div className="abt-side-head"><span>{item.sideTitle || "BIO"}</span></div>
           <div className="abt-side-body">
-            {item.side.map(sec => <AboutSection sec={sec} delay={delay} key={sec.title} />)}
+            {item.side.map(sec => <AboutSection sec={sec} delay={sideDelay} key={sec.title} />)}
           </div>
         </div>}
     </aside>;
