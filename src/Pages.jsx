@@ -319,16 +319,25 @@ const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
 //     "list" : items: [{ icon, name, detail, credit, mine }]
 //              icon = a short symbol/emoji, or an imported image
 //              credit = small tag on the right (e.g. "ART BY @artist"); mine: true makes it blue
+//   side   - optional. A small tab hanging off the right side of the card, with the same kind of sections
+//            (sideTitle = the little title on it). Used by PROFILE for basic info, map and languages.
 // Characters repeat in order if there are more buttons than images.
 const ABOUTME_ITEMS = [{
   id: "profile",
   label: "PROFILE",
   role: "LEADER",
+  sideTitle: "BIO",
   sections: [{
     title: "INTRODUCTION",
     type: "text",
-    paragraphs: ["hi, i'm moneybagg. write your introduction here.", "add as many paragraphs as you like, each string is its own paragraph."]
+    paragraphs: ["hi, i'm moneybagg! this is where your main introduction goes. say who you are, what you do and what this little corner of the internet is for.", "add a second paragraph about what you're into: the things you make, the games you play, the music that's on repeat. each string in this list is its own paragraph, so write as many as you like.", "and a last one for anything else visitors should know before they go poking around the rest of the menu."]
   }, {
+    title: "CURRENTLY",
+    type: "text",
+    paragraphs: ["a short note about what you're working on or into right now. placeholder text, swap it whenever."]
+  }],
+  // the small tab that hangs off the right side of the card. Same section types as above.
+  side: [{
     title: "BASIC INFO",
     type: "rows",
     rows: [["NAME", "moneybagg"], ["YEAR", "placeholder"], ["BIRTHDAY", "mm/dd"], ["PRONOUNS", "placeholder"], ["MAJOR", "computer science"]]
@@ -396,45 +405,188 @@ const ABOUTME_ITEMS = [{
 // That is why the About detail card was in the page but invisible. The card's classes are now "abt-*" in
 // this file, and the matching selectors in about.css (still written as ".ad-*") are renamed here so
 // about.css doesn't need to change.
-const aboutCss = aboutStyles.replace(/\.ad-/g, ".abt-");
+// Look-and-feel changes for the About page, added on top of about.css (loaded after it, so they win).
+// Calmer "water" palette: navy + one cyan + a mid blue. Red is kept only as a small accent
+// (the tip of the card's top edge and the diamond in front of group titles).
+const aboutTweaks = `
+/* ── card: no number, water colours, red only on the tip of the top edge ── */
+.abt-panel { --side-w: min(17vw, 240px); }
+.abt-panel.has-side { right: calc(3vw + var(--side-w)); width: min(40vw, 580px); }
+.abt-shell { background: rgba(6, 18, 52, 0.94); }
+.abt-shell::before { background: linear-gradient(90deg, #c4001a 0 12%, #3ce2ff 12%, #1a6aff 100%); }
+.abt-title { color: #06133b; }
+.abt-chip { background: #06133b; color: #8df6ff; }
+.abt-body { scrollbar-color: #3ce2ff transparent; }
+.abt-sec-title { color: #bfeaff; }
+.abt-sec-title i { background: #3ce2ff; }
+.abt-sec-title b { background: linear-gradient(90deg, rgba(191, 234, 255, 0.5), rgba(191, 234, 255, 0)); }
+.abt-row, .abt-item, .abt-text { background: rgba(120, 170, 255, 0.08); }
+.abt-row, .abt-text { border-left: 3px solid #2f7bff; }
+.abt-icon-wrap { filter: drop-shadow(4px 4px 0 #2f7bff); }
+.abt-tag { background: rgba(60, 226, 255, 0.12); color: #bff6ff; border-left: 3px solid #3ce2ff; }
+.abt-credit { background: #2f7bff; }
+.abt-credit.mine { background: #8df6ff; color: #04122e; }
+
+/* ── the small tab hanging off the right side of the card ── */
+.abt-side {
+  position: absolute;
+  left: calc(100% - 10px);
+  top: 74px;
+  z-index: -1;
+  width: var(--side-w);
+  max-height: calc(100% - 100px);
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+  background: rgba(6, 18, 52, 0.94);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  animation: abt-side-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+@keyframes abt-side-in {
+  from { opacity: 0; transform: translateX(-70px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.abt-side::before { content: ""; height: 5px; flex-shrink: 0; background: #3ce2ff; }
+.abt-side-head {
+  flex-shrink: 0;
+  padding: 7px 22px 7px 16px;
+  background: #fff;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+.abt-side-head span {
+  font-family: 'Anton', sans-serif;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: 1px;
+  line-height: 1;
+  color: #06133b;
+}
+.abt-side-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px 16px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #3ce2ff transparent;
+}
+.abt-side .abt-sec { margin-bottom: 16px; }
+.abt-side .abt-sec-title { font-size: 17px; letter-spacing: 3px; margin-bottom: 8px; }
+.abt-side .abt-row { grid-template-columns: 1fr; gap: 2px; padding: 6px 12px 7px 10px; margin-bottom: 5px; }
+.abt-side .abt-k { font-size: 14px; letter-spacing: 2px; }
+.abt-side .abt-v { font-size: 19px; }
+.abt-side .abt-item { padding: 7px 12px 7px 8px; gap: 10px; }
+.abt-side .abt-icon { width: 36px; height: 36px; font-size: 18px; }
+.abt-side .abt-name { font-size: 17px; }
+.abt-side .abt-detail { font-size: 12px; }
+.abt-side .abt-tag { font-size: 17px; padding: 4px 14px 4px 9px; }
+
+/* ── left list: navy bars, cyan underlay instead of red ── */
+.sc-bar { background: #0a1633; }
+.sc-bar-red { background: #3ce2ff; }
+.sc-bar-outer.active .sc-label { color: #06133b; }
+
+/* ── group divider (e.g. INTERESTS), now with a line you can actually see ── */
+.sc-group {
+  width: 45vw;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 18px;
+  pointer-events: none;
+  transform: translateX(-100%);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sc-group.mounted { transform: translateX(0); }
+.sc-group-dot { width: 10px; height: 10px; background: #c4001a; transform: rotate(45deg); flex-shrink: 0; }
+.sc-group-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 5px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.8);
+  user-select: none;
+}
+.sc-group-rule {
+  flex: 1;
+  min-width: 40px;
+  height: 3px;
+  background: #fff;
+  box-shadow: 0 2px 0 rgba(6, 19, 59, 0.85), 0 0 8px rgba(255, 255, 255, 0.35);
+  transform: skewX(-30deg);
+}
+@media (max-width: 1024px) {
+  .sc-group { width: min(88vw, 760px); }
+  .abt-panel.has-side { right: 8px; width: auto; }
+  .abt-side {
+    position: static;
+    z-index: auto;
+    width: auto;
+    max-height: 18vh;
+    flex-shrink: 0;
+    margin-top: 6px;
+    padding-left: 0;
+    clip-path: none;
+  }
+}
+@media (max-width: 768px) {
+  .sc-group { width: min(96vw, 560px); height: 20px; padding-left: 10px; }
+  .sc-group-label { font-size: 15px; letter-spacing: 3px; }
+}
+`;
+
+const aboutCss = aboutStyles.replace(/\.ad-/g, ".abt-") + aboutTweaks;
+
+// One section of a card (also used inside the side tab).
+function AboutSection({ sec, delay }) {
+  return <section className="abt-sec">
+      <div className="abt-sec-title"><i />{sec.title}<b /></div>
+      {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="abt-row" style={delay()} key={k}>
+          <span className="abt-k">{k}</span>
+          <span className="abt-v">{v}</span>
+        </div>)}
+      {sec.type === "text" && sec.paragraphs.map((t, k) => <p className="abt-text" style={delay()} key={k}>{t}</p>)}
+      {sec.type === "tags" && <div className="abt-tags">
+          {sec.tags.map(t => <span className="abt-tag" style={delay()} key={t}>{t}</span>)}
+        </div>}
+      {sec.type === "list" && sec.items.map((it, k) => <div className="abt-item" style={delay()} key={k}>
+          <div className="abt-icon-wrap">
+            <div className="abt-icon">
+              {typeof it.icon === "string" && it.icon.length > 3 ? <img src={it.icon} alt="" /> : it.icon}
+            </div>
+          </div>
+          <div className="abt-item-text">
+            <div className="abt-name">{it.name}</div>
+            {it.detail && <div className="abt-detail">{it.detail}</div>}
+          </div>
+          {it.credit && <span className={`abt-credit${it.mine ? " mine" : ""}`}>{it.credit}</span>}
+        </div>)}
+    </section>;
+}
 
 // The card that shows on the right side of the About page.
-function AboutDetail({ item, index, chip }) {
+// If the button has a "side" list, a small tab hangs off the right edge of the card.
+function AboutDetail({ item, chip }) {
   let n = 0; // counts rows so they pop in one after another
   const delay = () => ({ animationDelay: `${120 + n++ * 55}ms` });
-  return <aside className="abt-panel">
+  return <aside className={`abt-panel${item.side ? " has-side" : ""}`}>
       <div className="abt-shell" key={item.id}>
         <div className="abt-head">
-          <span className="abt-index">{String(index + 1).padStart(2, "0")}</span>
           <span className="abt-title">{item.label}</span>
           <span className="abt-chip">{chip}</span>
         </div>
         <div className="abt-body">
-          {item.sections.map(sec => <section className="abt-sec" key={sec.title}>
-              <div className="abt-sec-title"><i />{sec.title}<b /></div>
-              {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="abt-row" style={delay()} key={k}>
-                  <span className="abt-k">{k}</span>
-                  <span className="abt-v">{v}</span>
-                </div>)}
-              {sec.type === "text" && sec.paragraphs.map((t, k) => <p className="abt-text" style={delay()} key={k}>{t}</p>)}
-              {sec.type === "tags" && <div className="abt-tags">
-                  {sec.tags.map(t => <span className="abt-tag" style={delay()} key={t}>{t}</span>)}
-                </div>}
-              {sec.type === "list" && sec.items.map((it, k) => <div className="abt-item" style={delay()} key={k}>
-                  <div className="abt-icon-wrap">
-                    <div className="abt-icon">
-                      {typeof it.icon === "string" && it.icon.length > 3 ? <img src={it.icon} alt="" /> : it.icon}
-                    </div>
-                  </div>
-                  <div className="abt-item-text">
-                    <div className="abt-name">{it.name}</div>
-                    {it.detail && <div className="abt-detail">{it.detail}</div>}
-                  </div>
-                  {it.credit && <span className={`abt-credit${it.mine ? " mine" : ""}`}>{it.credit}</span>}
-                </div>)}
-            </section>)}
+          {item.sections.map(sec => <AboutSection sec={sec} delay={delay} key={sec.title} />)}
         </div>
       </div>
+      {item.side && <div className="abt-side" key={`${item.id}-side`}>
+          <div className="abt-side-head"><span>{item.sideTitle || "BIO"}</span></div>
+          <div className="abt-side-body">
+            {item.side.map(sec => <AboutSection sec={sec} delay={delay} key={sec.title} />)}
+          </div>
+        </div>}
     </aside>;
 }
 
@@ -494,18 +646,18 @@ export function AboutMe() {
   }, [active, navigate, revealed]);
   return <div id="menu-screen">
       <BgVideo src={VIDEO.about} poster={poster_main1} />
-      {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} index={active} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
+      {revealed && <AboutDetail item={ABOUTME_ITEMS[active]} chip={(ABOUTME_ITEMS.slice(0, active + 1).reverse().find(x => x.group) || {}).group || "ABOUT"} />}
       <style>{aboutCss}</style>
       <div className={`pg-title${mounted ? " mounted" : ""}`}>ABOUT ME</div>
 
       <div className="sc-root" role="navigation">
         {ABOUTME_ITEMS.map((item, i) => <Fragment key={item.id}>
-            {item.group && <div className={`sc-divider${mounted ? " mounted" : ""}`} style={{
+            {item.group && <div className={`sc-group${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${i * 80}ms`
         }}>
-                <span className="sc-divider-dot" />
-                <span className="sc-divider-label">{item.group}</span>
-                <span className="sc-divider-line" />
+                <span className="sc-group-dot" />
+                <span className="sc-group-label">{item.group}</span>
+                <span className="sc-group-rule" />
               </div>}
             <div className={`sc-bar-outer${active === i ? " active" : ""}${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${i * 80}ms`
