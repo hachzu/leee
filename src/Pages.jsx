@@ -319,8 +319,8 @@ const ABOUTME_CHARS = [asset_char1_png, asset_char2_png, asset_char3_png];
 //     "list" : items: [{ icon, name, detail, credit, mine }]
 //              icon = a short symbol/emoji, or an imported image
 //              credit = small tag on the right (e.g. "ART BY @artist"); mine: true makes it blue
-//   side   - optional. A small tab hanging off the right side of the card, with the same kind of sections
-//            (sideTitle = the little title on it). Used by PROFILE for basic info, map and languages.
+//   side   - optional. A narrow banner hanging from the top, to the right of the slash, with the same kind of
+//            sections (sideTitle = the little title on it). Used by PROFILE for basic info, map and languages.
 // Characters repeat in order if there are more buttons than images.
 const ABOUTME_ITEMS = [{
   id: "profile",
@@ -336,7 +336,7 @@ const ABOUTME_ITEMS = [{
     type: "text",
     paragraphs: ["a short note about what you're working on or into right now. placeholder text, swap it whenever."]
   }],
-  // the small tab that hangs off the right side of the card. Same section types as above.
+  // the narrow banner hanging from the top, next to the slash. Same section types as above.
   side: [{
     title: "BASIC INFO",
     type: "rows",
@@ -405,20 +405,87 @@ const ABOUTME_ITEMS = [{
 // That is why the About detail card was in the page but invisible. The card's classes are now "abt-*" in
 // this file, and the matching selectors in about.css (still written as ".ad-*") are renamed here so
 // about.css doesn't need to change.
-// Look-and-feel changes for the About page, added on top of about.css (loaded after it, so they win).
-// Calmer "water" palette: navy + one cyan + a mid blue. Red is kept only as a small accent
-// (the tip of the card's top edge and the diamond in front of group titles).
+// Look and feel of the About page, added on top of about.css (it loads after it, so these win).
+//  - calmer "water" palette: navy + one cyan + a mid blue. Red is only a small accent.
+//  - the detail card is a slanted "slash" that sweeps in from the top right and never touches the
+//    list on the left. --lean (just below) is the angle of the slash: 0deg gives a plain straight panel.
 const aboutTweaks = `
-/* ── card: no number, water colours, red only on the tip of the top edge ── */
-.abt-panel { --side-w: min(17vw, 240px); }
-.abt-panel.has-side { right: calc(3vw + var(--side-w)); width: min(40vw, 580px); }
-.abt-shell { background: rgba(6, 18, 52, 0.94); }
-.abt-shell::before { background: linear-gradient(90deg, #c4001a 0 12%, #3ce2ff 12%, #1a6aff 100%); }
-.abt-title { color: #06133b; }
+/* ───────── the slash ───────── */
+.abt-panel {
+  --lean: 8deg;
+  --side-w: min(14vw, 220px);
+  top: -5vh;
+  bottom: -5vh;
+  left: auto;
+  right: 0;
+  width: min(48vw, 880px);
+  flex-direction: row;
+  align-items: stretch;
+  transform: skewX(calc(var(--lean) * -1));
+  animation: abt-slash-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.abt-panel.has-side { width: min(50vw, 940px); }
+@keyframes abt-slash-in {
+  0%   { translate: 62vw -70vh; opacity: 0; }
+  50%  { opacity: 1; }
+  78%  { translate: -1.2vw 1.6vh; }
+  100% { translate: 0 0; opacity: 1; }
+}
+
+/* two thin lines running alongside the slash's left edge */
+.abt-panel::before, .abt-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  transform-origin: top;
+  animation: abt-line-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+.abt-panel::before { left: -16px; width: 4px; background: #fff; }
+.abt-panel::after  { left: -27px; width: 2px; background: #3ce2ff; }
+@keyframes abt-line-in {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* main slab. --pad-r keeps the text clear of the screen edge (the slab runs off it) */
+.abt-shell {
+  --pad-r: 92px;
+  clip-path: none;
+  min-width: 0;
+  background: rgba(6, 18, 52, 0.94);
+}
+.abt-panel.has-side .abt-shell { --pad-r: 30px; }
+/* the left edge stripe: red tip at the top, then cyan fading into blue */
+.abt-shell::before {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: 8px;
+  height: auto;
+  z-index: 1;
+  background: linear-gradient(180deg, #c4001a 0 20%, #3ce2ff 20%, #1a6aff 100%);
+}
+
+/* title bar: sticks out past the slab's left edge and runs off the right of the screen */
+.abt-head {
+  position: relative;
+  z-index: 2;
+  margin: 14vh 0 16px -36px;
+  padding: 10px var(--pad-r) 10px 56px;
+  clip-path: none;
+}
+.abt-title { font-style: normal; font-size: 44px; color: #06133b; }
 .abt-chip { background: #06133b; color: #8df6ff; }
-.abt-body { scrollbar-color: #3ce2ff transparent; }
+
+.abt-body {
+  margin-right: var(--pad-r);
+  padding: 4px 14px calc(5vh + 4vh) 40px;
+  scrollbar-color: #3ce2ff transparent;
+}
 .abt-sec-title { color: #bfeaff; }
-.abt-sec-title i { background: #3ce2ff; }
 .abt-sec-title b { background: linear-gradient(90deg, rgba(191, 234, 255, 0.5), rgba(191, 234, 255, 0)); }
 .abt-row, .abt-item, .abt-text { background: rgba(120, 170, 255, 0.08); }
 .abt-row, .abt-text { border-left: 3px solid #2f7bff; }
@@ -427,37 +494,45 @@ const aboutTweaks = `
 .abt-credit { background: #2f7bff; }
 .abt-credit.mine { background: #8df6ff; color: #04122e; }
 
-/* ── the small tab hanging off the right side of the card ── */
+/* ───────── the narrow banner hanging from the top, to the right of the slab ───────── */
 .abt-side {
-  position: absolute;
-  left: calc(100% - 10px);
-  top: 74px;
-  z-index: -1;
-  width: var(--side-w);
-  max-height: calc(100% - 100px);
+  position: relative;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  padding-left: 10px;
+  align-self: flex-start;
+  width: var(--side-w);
+  max-height: calc(100% - 20vh);
+  margin: 0 86px 0 16px;
+  padding-top: 14vh;
   background: rgba(6, 18, 52, 0.94);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-  animation: abt-side-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 20px), 0 100%); /* swallowtail end */
+  animation: abt-side-in 0.55s cubic-bezier(0.34, 1.3, 0.5, 1) 0.3s both;
 }
 @keyframes abt-side-in {
-  from { opacity: 0; transform: translateX(-70px); }
-  to   { opacity: 1; transform: translateX(0); }
+  0%   { translate: 0 -105%; }
+  70%  { translate: 0 3%; }
+  100% { translate: 0 0; }
 }
-.abt-side::before { content: ""; height: 5px; flex-shrink: 0; background: #3ce2ff; }
+.abt-side::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  background: #3ce2ff;
+}
 .abt-side-head {
   flex-shrink: 0;
-  padding: 7px 22px 7px 16px;
+  margin-bottom: 4px;
+  padding: 7px 18px 7px 20px;
   background: #fff;
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
 }
 .abt-side-head span {
   font-family: 'Anton', sans-serif;
-  font-style: italic;
   font-size: 22px;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   line-height: 1;
   color: #06133b;
 }
@@ -465,7 +540,7 @@ const aboutTweaks = `
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 16px 16px 8px;
+  padding: 12px 8px 34px 18px;
   scrollbar-width: thin;
   scrollbar-color: #3ce2ff transparent;
 }
@@ -480,26 +555,23 @@ const aboutTweaks = `
 .abt-side .abt-detail { font-size: 12px; }
 .abt-side .abt-tag { font-size: 17px; padding: 4px 14px 4px 9px; }
 
-/* ── left list: navy bars, cyan underlay instead of red ── */
-.sc-bar { background: #0a1633; }
+/* ───────── left list: cyan underlay under the active bar instead of red ───────── */
 .sc-bar-red { background: #3ce2ff; }
-.sc-bar-outer.active .sc-label { color: #06133b; }
 
-/* ── group divider (e.g. INTERESTS), now with a line you can actually see ── */
+/* ───────── group divider (e.g. INTERESTS): just the title and a line you can actually see ───────── */
 .sc-group {
   width: 45vw;
   height: 26px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   padding-left: 18px;
   pointer-events: none;
   transform: translateX(-100%);
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .sc-group.mounted { transform: translateX(0); }
-.sc-group-dot { width: 10px; height: 10px; background: #c4001a; transform: rotate(45deg); flex-shrink: 0; }
 .sc-group-label {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
@@ -517,17 +589,30 @@ const aboutTweaks = `
   box-shadow: 0 2px 0 rgba(6, 19, 59, 0.85), 0 0 8px rgba(255, 255, 255, 0.35);
   transform: skewX(-30deg);
 }
+
+/* ───────── small screens: no slash, the card sits under the list and the banner under the card ───────── */
 @media (max-width: 1024px) {
   .sc-group { width: min(88vw, 760px); }
-  .abt-panel.has-side { right: 8px; width: auto; }
+  .abt-panel, .abt-panel.has-side {
+    --lean: 0deg;
+    top: auto;
+    bottom: 58px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    height: 46vh;
+    flex-direction: column;
+  }
+  .abt-panel::before, .abt-panel::after { display: none; }
+  .abt-shell, .abt-panel.has-side .abt-shell { --pad-r: 16px; }
+  .abt-head { margin: 0 0 10px 0; padding: 8px 16px 8px 18px; }
+  .abt-title { font-size: 28px; }
+  .abt-body { padding: 4px 6px 18px 16px; }
   .abt-side {
-    position: static;
-    z-index: auto;
     width: auto;
     max-height: 18vh;
-    flex-shrink: 0;
-    margin-top: 6px;
-    padding-left: 0;
+    margin: 6px 0 0;
+    padding-top: 0;
     clip-path: none;
   }
 }
@@ -542,7 +627,7 @@ const aboutCss = aboutStyles.replace(/\.ad-/g, ".abt-") + aboutTweaks;
 // One section of a card (also used inside the side tab).
 function AboutSection({ sec, delay }) {
   return <section className="abt-sec">
-      <div className="abt-sec-title"><i />{sec.title}<b /></div>
+      <div className="abt-sec-title">{sec.title}<b /></div>
       {sec.type === "rows" && sec.rows.map(([k, v]) => <div className="abt-row" style={delay()} key={k}>
           <span className="abt-k">{k}</span>
           <span className="abt-v">{v}</span>
@@ -566,8 +651,8 @@ function AboutSection({ sec, delay }) {
     </section>;
 }
 
-// The card that shows on the right side of the About page.
-// If the button has a "side" list, a small tab hangs off the right edge of the card.
+// The slanted slash that sweeps in from the top right of the About page.
+// If the button has a "side" list, a narrow banner hangs from the top next to it.
 function AboutDetail({ item, chip }) {
   let n = 0; // counts rows so they pop in one after another
   const delay = () => ({ animationDelay: `${120 + n++ * 55}ms` });
@@ -655,7 +740,6 @@ export function AboutMe() {
             {item.group && <div className={`sc-group${mounted ? " mounted" : ""}`} style={{
           transitionDelay: `${i * 80}ms`
         }}>
-                <span className="sc-group-dot" />
                 <span className="sc-group-label">{item.group}</span>
                 <span className="sc-group-rule" />
               </div>}
@@ -1104,7 +1188,6 @@ const skillsStyles = `
   margin-bottom: 10px;
   animation: sk-row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.sk-list-head i { width: 10px; height: 10px; background: var(--c); transform: rotate(45deg); flex-shrink: 0; }
 .sk-list-head span {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(18px, 1.6vw, 24px);
@@ -1543,7 +1626,7 @@ export function SkillsPage() {
 
         {/* content of the selected category, tinted with its colour */}
         <div className="sk-list" key={cur.id} style={{ "--c": cur.color }}>
-          <div className="sk-list-head"><i /><span>{cur.name.toUpperCase()}</span><b /></div>
+          <div className="sk-list-head"><span>{cur.name.toUpperCase()}</span><b /></div>
           {cur.type === "bars" && cur.items.map((s, n) => <div className="sk-row" style={{ "--n": n }} key={s.name}>
               <div className="sk-row-top">
                 <span className="sk-row-name">{s.name}</span>
